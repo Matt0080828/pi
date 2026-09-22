@@ -6,11 +6,12 @@
 #   ./pi2-pi-agent.sh verify    # judge the newest log against the acceptance criteria (fail-closed)
 #   ./pi2-pi-agent.sh all       # probe + install + verify
 #
-# The Pi2 has no sudo and lives at pi2@192.168.50.90 (SSH key auth). This script never installs
+# The board has no sudo. Set HOST=user@host for the Raspberry Pi you are driving; no default
+# address is baked in. This script never installs anything with root.
 # anything with root and never treats "unreachable" as success.
 set -u
 
-HOST="${HOST:-pi2@192.168.50.90}"
+HOST="${HOST:-}"   # required by probe/install/all; verify only reads a log, so it needs no host
 HERE="$(cd "$(dirname "$0")" && pwd)"
 INSTALLER="$HERE/install-pi-on-pi2.sh"
 LOGDIR="$HERE/logs"
@@ -20,7 +21,15 @@ mkdir -p "$LOGDIR"
 
 usage() { sed -n '2,12p' "$0"; exit 2; }
 
+require_host() {
+  if [ -z "${HOST:-}" ]; then
+    echo "  ✗ set HOST=user@host for the Raspberry Pi (需要設定 HOST；見 scripts/pi2-armv7/README.md)" >&2
+    return 1
+  fi
+}
+
 probe() {
+  require_host || return 1
   echo "=== 探測 $HOST"
   if ! timeout 25 $SSH "$HOST" 'true' 2>/dev/null; then
     echo "  ✗ 連不上（關機或不在區網）→ 不進行任何後續動作"
@@ -37,6 +46,7 @@ probe() {
 }
 
 install() {
+  require_host || return 1
   probe || return 1
   echo
   # The board's own download of Node is slow, so fetch the tarball here and push it over.

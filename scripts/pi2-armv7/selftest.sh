@@ -44,17 +44,14 @@ check "dry-run 有印出 [dry-run]" "有" "$(echo "$OUT2" | grep -q '\[dry-run\]
 check "dry-run 前後 ~/opt 與 ~/.local/bin 不變" "$BEFORE" "$AFTER"
 
 echo
-echo "=== 3) 板子連不上時，probe 不得宣稱成功"
+echo "=== 3) HOST 必填，且連不上時不得宣稱成功"
 OUT3=$("$DRIVER" probe 2>&1); RC3=$?
-REACH=$(echo "$OUT3" | grep -q '✓ 已連線' && echo 已連線 || echo 連不上)
-if [ "$REACH" = "已連線" ]; then
-  echo "  （Pi2 目前可連線 → 這條負向測試不適用，標記為 SKIP）"
-else
-  check "exit 非 0" 1 "$([ "$RC3" -ne 0 ] && echo 1 || echo 0)"
-  check "明確說出連不上" "有" "$(echo "$OUT3" | grep -q '連不上' && echo 有 || echo 沒有)"
-fi
+check "未設 HOST → 非 0" 1 "$([ "$RC3" -ne 0 ] && echo 1 || echo 0)"
+check "明確要求設定 HOST" "有" "$(echo "$OUT3" | grep -qi 'set HOST' && echo 有 || echo 沒有)"
+OUT4=$(HOST=pi2@example.invalid "$DRIVER" probe 2>&1); RC4=$?
+check "連不通的主機 → 非 0" 1 "$([ "$RC4" -ne 0 ] && echo 1 || echo 0)"
+check "說明連不上（不得假成功）" "有" "$(echo "$OUT4" | grep -q '連不上' && echo 有 || echo 沒有)"
 
-echo
 echo "=== 4) 驗收器：好的記錄要過、壞的記錄必須被擋"
 cat > "$TMP/good.log" <<'EOF'
 === 0) 基本環境
