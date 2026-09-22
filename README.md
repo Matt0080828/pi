@@ -37,6 +37,21 @@ To learn more about Pi:
 
 For Slack/chat automation and workflows see [earendil-works/pi-chat](https://github.com/earendil-works/pi-chat).
 
+## Platform support: ARMv7 / Raspberry Pi 2
+
+*Fork addition — see [docs/armv7-pi2b.md](docs/armv7-pi2b.md).* The published Linux binaries cover
+x64 and arm64 only, and Node ships official `linux-armv7l` builds only on the v22 line, but the CLI
+itself runs on 32-bit ARM. Verified on a Raspberry Pi 2 Model B (ARMv7, 921 MiB RAM, Raspbian 13):
+install Node **v22 armv7l** into `$HOME` (no root), then
+`npm install -g --prefix ~/.local @earendil-works/pi-coding-agent` — `pi --version` returns 0.87.0,
+startup 4.7–5.1 s, node RSS 40 MiB, and no native module is needed (`node:sqlite` is built in).
+The TUI's X11/clipboard helper is x64/arm64-only and is skipped by design on other architectures
+(the coding agent falls back to the command-line clipboard tools).
+
+- Hardware measurements and how to install: [`docs/armv7-pi2b.md`](docs/armv7-pi2b.md)
+- Raw verification output from the board: [`docs/armv7-pi2b-verification.md`](docs/armv7-pi2b-verification.md)
+- Install/verify scripts (self-tested, fail-closed): [`scripts/pi2-armv7/`](scripts/pi2-armv7/)
+
 ## Permissions & Containerization
 
 Pi does not include a built-in permission system for restricting filesystem, process, network, or credential access. By default, it runs with the permissions of the user and process that launched it.
