@@ -17,6 +17,14 @@ case "$(uname -m)" in
     aarch64|arm64)
         arch="arm64"
         ;;
+    armv7l|armv6l)
+        # ARMv7/ARMv6 (Raspberry Pi 2/Zero class): no prebuild ships for these architectures, the
+        # loader never requests one, and building it here would need XCB development headers. Skip
+        # explicitly rather than failing the whole workspace build. The coding agent falls back to
+        # the command-line clipboard tools, which is documented behaviour.
+        echo "No Linux native helper for $(uname -m): skipping (the coding agent uses its command-line clipboard fallback)." >&2
+        exit 0
+        ;;
     *)
         echo "Unsupported Linux architecture: $(uname -m)" >&2
         exit 1

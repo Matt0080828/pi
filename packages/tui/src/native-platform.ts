@@ -25,7 +25,10 @@ const helpers = new Map<string, NativePlatformHelper | undefined>();
 
 function loadNativePlatformHelper(platform: string, suffix = ""): NativePlatformHelper | undefined {
 	const arch = process.arch;
-	if (arch !== "x64" && arch !== "arm64") return undefined;
+	// "arm" is the 32-bit ARM (armv7l/armv6l) build: no prebuild ships for it, but an operator who
+	// compiles one locally (see native/linux/build.sh) should be able to use it. Without a helper the
+	// require below fails and this returns undefined, exactly as before.
+	if (arch !== "x64" && arch !== "arm64" && arch !== "arm") return undefined;
 	const nativePath = path.join(
 		"native",
 		platform,
