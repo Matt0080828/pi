@@ -3,6 +3,9 @@
 > **Note:** the paths below were redacted (`/home/<user>` instead of the real home directory)
 > before publication. Nothing else was altered - the order and every number are as they came
 > off the board.
+>
+> English guide to this log (explanations and a reference translation; the log below stays verbatim):
+> [`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)
 
 Raw output of `scripts/pi2-armv7/pi2-pi-agent.sh all` (probe → install → verify) driven from the PC
 against the Pi 2B on 2026-09-23, installing `@earendil-works/pi-coding-agent@0.87.1`:

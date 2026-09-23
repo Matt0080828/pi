@@ -7,7 +7,8 @@ architecture (see [What this fork changes](#4-what-this-fork-changes)).
 
 - Target board: Raspberry Pi 2 Model B (armv7l, 4x900 MHz, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
 - Measured: **2026-09-23 with `@earendil-works/pi-coding-agent@0.87.1`** (previous cycle: 2026-09-22, 0.87.0)
-- Raw board log: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)
+- Raw board log: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md) — with an English guide to
+  the same log: [`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)
 - The evidence is **hardware measurement, not static reasoning**: 11/11 acceptance checks passed
 - 繁體中文原版：[`armv7-pi2b.md`](armv7-pi2b.md)
 
