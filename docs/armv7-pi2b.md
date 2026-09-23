@@ -1,13 +1,15 @@
 # 在 Raspberry Pi 2 Model B（ARMv7）上跑 pi
 
+> 語言／Language：[**繁體中文**](armv7-pi2b.md) ｜ [English](armv7-pi2b.en.md) ｜ [简体中文](armv7-pi2b.zh-CN.md) ｜ [日本語](armv7-pi2b.ja.md) ｜ [한국어](armv7-pi2b.ko.md) ｜ [Español](armv7-pi2b.es.md)
+
 **結論：可以跑，已在實體 Pi2B 上量測通過。** 不需要改動 agent 的任何程式碼——
 用**官方 npm 套件**安裝即可；本分支另外補了兩個讓「從原始碼建置」與「未來的 armv7 原生 helper」不會卡住的
 小修改（見下方「本分支的修改」）。
 
 - 目標板：Raspberry Pi 2 Model B（armv7l, 4×900 MHz, 921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
 - 實測日期：**2026-09-23（`@earendil-works/pi-coding-agent@0.87.1`）**｜前一輪 2026-09-22 為 0.87.0
-- 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)
-- English version of this manual: [`armv7-pi2b.en.md`](armv7-pi2b.en.md)
+- 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（英文導讀：[`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)）
+- 其他語言版本見本頁最上方語言列
 - 證據是**實機量測**，不是靜態推論：驗收 11/11 通過
 
 ---

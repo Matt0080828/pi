@@ -1,5 +1,7 @@
 # Running `pi` on a Raspberry Pi 2 Model B (ARMv7)
 
+> Language／語言：[繁體中文](armv7-pi2b.md) ｜ [**English**](armv7-pi2b.en.md) ｜ [简体中文](armv7-pi2b.zh-CN.md) ｜ [日本語](armv7-pi2b.ja.md) ｜ [한국어](armv7-pi2b.ko.md) ｜ [Español](armv7-pi2b.es.md)
+
 **Verdict: yes, it runs — measured on a physical Pi 2B (11/11 acceptance checks).** No agent source
 changes are required: install the **official npm package**. This branch adds two small enabling changes
 so that "building from source on ARMv7" and "a future ARMv7 native helper" are not blocked by the
