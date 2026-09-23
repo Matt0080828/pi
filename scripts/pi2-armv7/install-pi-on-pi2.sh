@@ -11,9 +11,9 @@
 # Facts this is built on (measured 2026-09-21, not assumed):
 #   * nodejs.org ships linux-armv7l for every v22 release (35/35, incl. all >= 22.19, latest
 #     v22.23.2). v23 and later do NOT ship armv7 - so pin 22.
-#   * earendil-works/pi publishes no armv7 binary: v0.87.0 assets are linux-x64, linux-arm64,
+#   * earendil-works/pi publishes no armv7 binary: v0.87.1 assets are linux-x64, linux-arm64,
 #     darwin-x64/arm64, windows-x64/arm64 only. Use the npm package, not the tarball.
-#   * @earendil-works/pi-coding-agent@0.87.0 has no os/cpu restriction, ships a prebuilt bundle
+#   * @earendil-works/pi-coding-agent@0.87.1 has no os/cpu restriction, ships a prebuilt bundle
 #     (dist/bundle/*.js) and depends on plain JS + one wasm package (photon-node has
 #     photon_rs_bg.wasm). `canvas` is only a devDependency. The only native piece is the TUI's
 #     linux-platform-x11.node, which its loader skips on any arch that is not x64/arm64.
@@ -26,7 +26,7 @@ NODE_LINK="$HOME/opt/node22"
 NODE_URL="https://nodejs.org/dist/v$NODE_VER/node-v$NODE_VER-linux-armv7l.tar.xz"
 # optional: a tarball already fetched elsewhere (the PC can download it much faster than the board)
 NODE_TARBALL="${NODE_TARBALL:-}"
-PI_PKG="${PI_PKG:-@earendil-works/pi-coding-agent@0.87.0}"
+PI_PKG="${PI_PKG:-@earendil-works/pi-coding-agent@0.87.1}"
 NPM_PREFIX="$HOME/.local"
 LOG="pi2-pi-install-$(date +%Y%m%d-%H%M%S).log"
 

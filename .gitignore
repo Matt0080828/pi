@@ -2,6 +2,7 @@ node_modules/
 dist/
 .artifacts/
 *.log
+scripts/pi2-armv7/cache/
 .DS_Store
 *.tsbuildinfo
 # packages/*/node_modules/

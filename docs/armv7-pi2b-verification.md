@@ -4,14 +4,15 @@
 > before publication. Nothing else was altered - the order and every number are as they came
 > off the board.
 
-Raw output of `scripts/pi2-armv7/install-pi-on-pi2.sh --check-only` on the Pi 2B, 2026-09-22:
+Raw output of `scripts/pi2-armv7/pi2-pi-agent.sh all` (probe → install → verify) driven from the PC
+against the Pi 2B on 2026-09-23, installing `@earendil-works/pi-coding-agent@0.87.1`:
 
 ```text
 
 === 0) 基本環境
     uname -m = armv7l  |  Raspbian GNU/Linux 13 (trixie)
-    mem: 921 MiB total, 628 MiB available
-    disk $HOME: 6.4G free
+    mem: 921 MiB total, 640 MiB available
+    disk $HOME: 6.2G free
   ✓ 架構是 armv7l（Pi2B）
   ✓ 以一般使用者執行（uid 1000），全程安裝到 $HOME，不需要 sudo
   ✓ 下載工具：curl
@@ -23,11 +24,17 @@ Raw output of `scripts/pi2-armv7/install-pi-on-pi2.sh --check-only` on the Pi 2B
 
 === 2) 安裝 pi coding agent（用 npm 套件，不用官方 arm64/x64 tarball）
     npm 10.9.8  |  目標 prefix: /home/<user>/.local
-    [check-only] 略過 npm install
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+changed 119 packages in 3m
+
+9 packages are looking for funding
+  run `npm fund` for details
+  ✓ 已安裝 @earendil-works/pi-coding-agent@0.87.1 到 /home/<user>/.local
 
 === 3) 驗收（可量測的項目）
   ✓ pi 執行檔存在：/home/<user>/.local/bin/pi
-    pi --version → 0.87.0
+    pi --version → 0.87.1
     pi --help   → pi - AI coding assistant with read, bash, edit, write tools  Usage: 
   套件內附的 prebuild（其他平台，armv7 不會載入）：
     @earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-tui/native/darwin/prebuilds/darwin-arm64/darwin-platform.node
@@ -40,7 +47,7 @@ Raw output of `scripts/pi2-armv7/install-pi-on-pi2.sh --check-only` on the Pi 2B
   ✓ （真正的證明：pi --version 已在上面正常輸出 ✓）
 
 === 4) 量測（給日後比對用）
-    pi --version 耗時 5.13 s
+    pi --version 耗時 4.92 s
     node RSS 基準: 40 MiB
     磁碟：Node 187M｜pi 套件 156M（注意：/home/<user>/.local 可能與其他工具共用，勿整包刪）
 
@@ -52,3 +59,37 @@ Raw output of `scripts/pi2-armv7/install-pi-on-pi2.sh --check-only` on the Pi 2B
 
 完成。記錄檔請用 --check-only 重跑輸出存證。
 ```
+
+The same run's fail-closed acceptance step (`scripts/pi2-armv7/pi2-pi-agent.sh verify`), judged
+against the log above:
+
+```text
+=== 驗收：scripts/pi2-armv7/logs/latest.log
+  ✓ 架構是 armv7l
+  ✓ 以一般使用者執行（非 root）
+  ✓ Node 是 v22 系列
+  ✓ node:sqlite 可用
+  ✓ pi 執行檔存在
+  ✓ pi --version 有輸出
+  ✓ 沒有 armv7 專屬的 prebuild
+  ✓ 沒有以 root 身分執行
+  ✓ 沒有任何非 v22 的 Node 痕跡
+  ✓ 沒有意外出現 .node
+  ✓ 沒有中止（fail-closed）
+
+✅ 全部驗收項目通過（實機量測，非推論）
+```
+
+Independent re-measurement after the install (three further `pi --version` runs, same board, 0.87.1):
+
+```text
+  run1: 4.75 s (0.87.1)
+  run2: 4.83 s (0.87.1)
+  run3: 4.81 s (0.87.1)
+  node RSS: 40 MiB
+  free: 655 MiB available
+  disk HOME: 6.2G
+```
+
+For reference, the previous cycle (2026-09-22, `--check-only`, 0.87.0) measured startup 4.68-5.13 s
+and 6.4 GB free; the 0.87.1 numbers above are a fresh install, not a re-read of that log.

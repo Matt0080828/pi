@@ -5,7 +5,8 @@
 小修改（見下方「本分支的修改」）。
 
 - 目標板：Raspberry Pi 2 Model B（armv7l, 4×900 MHz, 921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
-- 實測日期：2026-09-22｜原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)
+- 實測日期：**2026-09-23（`@earendil-works/pi-coding-agent@0.87.1`）**｜前一輪 2026-09-22 為 0.87.0
+- 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)
 - 證據是**實機量測**，不是靜態推論：驗收 11/11 通過
 
 ---
@@ -31,12 +32,12 @@ native reads are unavailable」——所以 armv7 上這是**設計允許的降�
 | 身份 | uid 1000，**全程未用 sudo**（安裝到 `$HOME`） |
 | Node | **v22.23.2**（官方 `linux-armv7l` tarball，26,338,176 bytes） |
 | `node:sqlite` | **可用** → session backend 不需要原生模組 |
-| CLI | **`pi --version` → 0.87.0**；`pi --help` 正常輸出 |
-| npm 安裝 | `added 119 packages in 3m`（npm 10.9.8） |
+| CLI | **`pi --version` → 0.87.1**；`pi --help` 正常輸出 |
+| npm 安裝 | `changed 119 packages in 3m`（npm 10.9.8） |
 | 附帶 prebuild | 只有 `darwin-arm64|x64`、`linux-arm64|x64`、`win32-arm64|x64` —— **沒有 `linux-arm`（armv7）** |
-| 啟動耗時 | `pi --version` **4.68–5.13 s**（Pi2B 冷啟動） |
-| 記憶體 | `node` 基準 RSS **40 MiB**；安裝時整機可用 628 MiB，未 OOM |
-| 磁碟 | Node 187 MB ＋ pi 套件 156 MB（`$HOME` 尚有 6.4 GB） |
+| 啟動耗時 | `pi --version` **4.75–4.92 s**（Pi2B 冷啟動） |
+| 記憶體 | `node` 基準 RSS **40 MiB**；安裝時整機可用 640 MiB，未 OOM |
+| 磁碟 | Node 187 MB ＋ pi 套件 156 MB（`$HOME` 尚有 6.2 GB） |
 
 > 已知限制：**CLI 本身已驗證**，但一次「真實模型回合」需要 API 金鑰或指向本機 OpenAI 相容端點
 > （例如同網段的 LM Studio），本分支的驗收沒有涵蓋那一項。
@@ -55,7 +56,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 0.87.0
+pi --version                 # 0.87.1
 
 # 3) 持久化（加進 ~/.bashrc）
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -124,5 +125,5 @@ loses clipboard/image integration but nothing crashes.
 This branch adds two optional enabling changes — `native/linux/build.sh` no longer fails the whole build on
 ARMv7 (it skips with a notice instead of `exit 1`), and the native loader also accepts `arm` so a locally
 built helper would be used — plus the tested install/verify scripts in `scripts/pi2-armv7/` and the raw
-hardware log in `docs/armv7-pi2b-verification.md`. Measured: `pi --version` 0.87.0, startup 4.7–5.1 s,
+hardware log in `docs/armv7-pi2b-verification.md`. Measured: `pi --version` 0.87.1, startup 4.75–4.92 s,
 node RSS 40 MiB, no OOM, ~156 MB for the package.

@@ -43,8 +43,8 @@ For Slack/chat automation and workflows see [earendil-works/pi-chat](https://git
 x64 and arm64 only, and Node ships official `linux-armv7l` builds only on the v22 line, but the CLI
 itself runs on 32-bit ARM. Verified on a Raspberry Pi 2 Model B (ARMv7, 921 MiB RAM, Raspbian 13):
 install Node **v22 armv7l** into `$HOME` (no root), then
-`npm install -g --prefix ~/.local @earendil-works/pi-coding-agent` — `pi --version` returns 0.87.0,
-startup 4.7–5.1 s, node RSS 40 MiB, and no native module is needed (`node:sqlite` is built in).
+`npm install -g --prefix ~/.local @earendil-works/pi-coding-agent` — `pi --version` returns 0.87.1,
+startup 4.75–4.92 s, node RSS 40 MiB, and no native module is needed (`node:sqlite` is built in).
 The TUI's X11/clipboard helper is x64/arm64-only and is skipped by design on other architectures
 (the coding agent falls back to the command-line clipboard tools).
 

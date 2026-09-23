@@ -61,10 +61,10 @@ cat > "$TMP/good.log" <<'EOF'
   ✓ Node v22.23.2 ✓（armv7 官方建置線）
   ✓ node:sqlite 可用（session backend 不需要原生模組）
 === 2) 安裝 pi coding agent（用 npm 套件，不用官方 arm64/x64 tarball）
-  ✓ 已安裝 @earendil-works/pi-coding-agent@0.87.0 到 /home/pi/.local
+  ✓ 已安裝 @earendil-works/pi-coding-agent@0.87.1 到 /home/pi/.local
 === 3) 驗收（可量測的項目）
   ✓ pi 執行檔存在：/home/pi/.local/bin/pi
-    pi --version → 0.87.0
+    pi --version → 0.87.1
   ✓ 沒有 linux-platform-x11.node（armv7 上預期如此，載入器會跳過）
   ✓ node_modules 內沒有任何 .node（純 JS + wasm，符合 armv7 可跑）
 EOF
