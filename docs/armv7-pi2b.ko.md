@@ -9,7 +9,7 @@
 
 - 대상 보드: Raspberry Pi 2 Model B(armv7l, 4×900 MHz, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
 - 계측일: **2026-09-23(`@earendil-works/pi-coding-agent@0.87.1`)**｜이전 사이클은 2026-09-22의 0.87.0
-- 원본 로그: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)([영문 해설](armv7-pi2b-verification.en.md) 포함)
+- 원본 로그: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)([한국어 해설](armv7-pi2b-verification.ko.md) 포함)
 - 근거는 **실기 계측**이며 정적 추론이 아닙니다: 승인 검사 11/11 통과
 
 ---

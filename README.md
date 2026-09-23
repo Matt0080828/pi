@@ -51,7 +51,10 @@ The TUI's X11/clipboard helper is x64/arm64-only and is skipped by design on oth
 - Hardware measurements and how to install: [`docs/armv7-pi2b.md`](docs/armv7-pi2b.md) —
   also available as [English](docs/armv7-pi2b.en.md) / [简体中文](docs/armv7-pi2b.zh-CN.md) /
   [日本語](docs/armv7-pi2b.ja.md) / [한국어](docs/armv7-pi2b.ko.md) / [Español](docs/armv7-pi2b.es.md)
-- Raw verification output from the board: [`docs/armv7-pi2b-verification.md`](docs/armv7-pi2b-verification.md) — with an English guide: [`docs/armv7-pi2b-verification.en.md`](docs/armv7-pi2b-verification.en.md)
+- Raw verification output from the board: [`docs/armv7-pi2b-verification.md`](docs/armv7-pi2b-verification.md) — guides:
+  [English](docs/armv7-pi2b-verification.en.md) / [简体中文](docs/armv7-pi2b-verification.zh-CN.md) /
+  [日本語](docs/armv7-pi2b-verification.ja.md) / [한국어](docs/armv7-pi2b-verification.ko.md) /
+  [Español](docs/armv7-pi2b-verification.es.md)
 - Install/verify scripts (self-tested, fail-closed): [`scripts/pi2-armv7/`](scripts/pi2-armv7/)
 
 ## Permissions & Containerization

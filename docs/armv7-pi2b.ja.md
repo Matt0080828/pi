@@ -9,7 +9,7 @@ helper を作る」場合がアーキテクチャで止まらないようにす�
 
 - 対象ボード：Raspberry Pi 2 Model B（armv7l、4×900 MHz、921 MiB RAM）、Raspbian GNU/Linux 13 (trixie)
 - 計測日：**2026-09-23（`@earendil-works/pi-coding-agent@0.87.1`）**｜前回サイクルは 2026-09-22 の 0.87.0
-- 生ログ：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（[英語ガイド](armv7-pi2b-verification.en.md)付き）
+- 生ログ：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（[日本語ガイド](armv7-pi2b-verification.ja.md)付き）
 - 根拠は**実機計測**であり、机上の推論ではありません：受け入れ検査 11/11 合格
 
 ---

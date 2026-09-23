@@ -4,8 +4,10 @@
 > before publication. Nothing else was altered - the order and every number are as they came
 > off the board.
 >
-> English guide to this log (explanations and a reference translation; the log below stays verbatim):
-> [`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)
+> Guides to this log (explanations and reference translations; the log below stays verbatim):
+> [English](armv7-pi2b-verification.en.md) ｜ [简体中文](armv7-pi2b-verification.zh-CN.md) ｜
+> [日本語](armv7-pi2b-verification.ja.md) ｜ [한국어](armv7-pi2b-verification.ko.md) ｜
+> [Español](armv7-pi2b-verification.es.md)
 
 Raw output of `scripts/pi2-armv7/pi2-pi-agent.sh all` (probe → install → verify) driven from the PC
 against the Pi 2B on 2026-09-23, installing `@earendil-works/pi-coding-agent@0.87.1`:

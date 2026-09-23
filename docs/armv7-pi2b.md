@@ -8,7 +8,7 @@
 
 - 目標板：Raspberry Pi 2 Model B（armv7l, 4×900 MHz, 921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
 - 實測日期：**2026-09-23（`@earendil-works/pi-coding-agent@0.87.1`）**｜前一輪 2026-09-22 為 0.87.0
-- 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（英文導讀：[`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)）
+- 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（導讀：[英](armv7-pi2b-verification.en.md)／[簡中](armv7-pi2b-verification.zh-CN.md)／[日](armv7-pi2b-verification.ja.md)／[韓](armv7-pi2b-verification.ko.md)／[西](armv7-pi2b-verification.es.md)）
 - 其他語言版本見本頁最上方語言列
 - 證據是**實機量測**，不是靜態推論：驗收 11/11 通過
 

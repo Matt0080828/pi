@@ -11,7 +11,7 @@ solo añade dos pequeños cambios "habilitadores" para que «compilar desde el c
 - Placa objetivo: Raspberry Pi 2 Model B (armv7l, 4×900 MHz, 921 MiB de RAM), Raspbian GNU/Linux 13 (trixie)
 - Medición: **2026-09-23 con `@earendil-works/pi-coding-agent@0.87.1`** (ciclo anterior: 2026-09-22, 0.87.0)
 - Registro sin procesar: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md) (con
-  [guía en inglés](armv7-pi2b-verification.en.md))
+  [guía en español](armv7-pi2b-verification.es.md))
 - La evidencia son **mediciones reales de hardware**, no razonamientos estáticos: 11/11 comprobaciones
 
 ---

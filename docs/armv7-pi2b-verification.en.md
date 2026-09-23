@@ -1,5 +1,7 @@
 # ARMv7 / Pi 2B verification — English guide
 
+> Language／語言：[繁體中文](armv7-pi2b-verification.md) ｜ [**English**](armv7-pi2b-verification.en.md) ｜ [简体中文](armv7-pi2b-verification.zh-CN.md) ｜ [日本語](armv7-pi2b-verification.ja.md) ｜ [한국어](armv7-pi2b-verification.ko.md) ｜ [Español](armv7-pi2b-verification.es.md)
+
 This is an English guide to the **raw board log** in
 [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md). The raw log is the evidence and is kept
 verbatim — the install script prints in Chinese, and rewriting it would destroy its value as a record.
