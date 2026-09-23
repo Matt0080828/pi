@@ -2,7 +2,8 @@
 
 Install and verify the `pi` coding agent on a Raspberry Pi 2 Model B (ARMv7). The full write-up —
 the decisive facts, the measured results, the acceptance criteria and the two optional code changes —
-is in [`docs/armv7-pi2b.md`](../../docs/armv7-pi2b.md).
+is in [`docs/armv7-pi2b.md`](../../docs/armv7-pi2b.md) (Chinese) and
+[`docs/armv7-pi2b.en.md`](../../docs/armv7-pi2b.en.md) (English).
 
 | Script | Runs on | What it does |
 | --- | --- | --- |
