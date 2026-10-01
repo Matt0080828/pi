@@ -7,7 +7,7 @@
 小修改（見下方「本分支的修改」）。
 
 - 目標板：Raspberry Pi 2 Model B（armv7l, 4×900 MHz, 921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
-- 實測日期：**2026-09-23（`@earendil-works/pi-coding-agent@0.87.1`）**｜前一輪 2026-09-22 為 0.87.0
+- 實測日期：**2026-10-01（`@earendil-works/pi-coding-agent@0.99.2`）**｜前一輪 2026-10-01 為 0.99.1
 - 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（導讀：[英](armv7-pi2b-verification.en.md)／[簡中](armv7-pi2b-verification.zh-CN.md)／[日](armv7-pi2b-verification.ja.md)／[韓](armv7-pi2b-verification.ko.md)／[西](armv7-pi2b-verification.es.md)）
 - 其他語言版本見本頁最上方語言列
 - 證據是**實機量測**，不是靜態推論：驗收 11/11 通過
@@ -35,15 +35,16 @@ native reads are unavailable」——所以 armv7 上這是**設計允許的降�
 | 身份 | uid 1000，**全程未用 sudo**（安裝到 `$HOME`） |
 | Node | **v22.23.2**（官方 `linux-armv7l` tarball，26,338,176 bytes） |
 | `node:sqlite` | **可用** → session backend 不需要原生模組 |
-| CLI | **`pi --version` → 0.87.1**；`pi --help` 正常輸出 |
-| npm 安裝 | `changed 119 packages in 3m`（npm 10.9.8） |
+| CLI | **`pi --version` → 0.99.2**；`pi --help` 正常輸出 |
+| npm 安裝 | `added 122 packages in 2m`（npm 10.9.8） |
 | 附帶 prebuild | 只有 `darwin-arm64|x64`、`linux-arm64|x64`、`win32-arm64|x64` —— **沒有 `linux-arm`（armv7）** |
-| 啟動耗時 | `pi --version` **4.75–4.92 s**（Pi2B 冷啟動） |
-| 記憶體 | `node` 基準 RSS **40 MiB**；安裝時整機可用 640 MiB，未 OOM |
-| 磁碟 | Node 187 MB ＋ pi 套件 156 MB（`$HOME` 尚有 6.2 GB） |
+| 啟動耗時 | `pi --version` **4.89 s**（安裝當次）／重測 4.80–5.04 s（Pi2B 冷啟動） |
+| 記憶體 | `node` 基準 RSS **39 MiB**；安裝時整機可用 734 MiB，未 OOM |
+| 磁碟 | Node 187 MB ＋ pi 套件 168 MB（`$HOME` 尚有 5.8 GB） |
 
-> 已知限制：**CLI 本身已驗證**，但一次「真實模型回合」需要 API 金鑰或指向本機 OpenAI 相容端點
-> （例如同網段的 LM Studio），本分支的驗收沒有涵蓋那一項。
+> 已知限制：**CLI 本身已驗證**，但一次「真實模型回合」需要 API 金鑰或自架的本機模型伺服器
+> （pi 0.99.2 的內建本機路徑是 llama.cpp router，由 `LLAMA_BASE_URL` 指向；它不吃 LM Studio 的
+> OpenAI 相容 API），本分支的驗收沒有涵蓋那一項。
 
 ## 3. 安裝與使用（適用方式）
 
@@ -59,7 +60,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 0.87.1
+pi --version                 # 0.99.2
 
 # 3) 持久化（加進 ~/.bashrc）
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -128,5 +129,5 @@ loses clipboard/image integration but nothing crashes.
 This branch adds two optional enabling changes — `native/linux/build.sh` no longer fails the whole build on
 ARMv7 (it skips with a notice instead of `exit 1`), and the native loader also accepts `arm` so a locally
 built helper would be used — plus the tested install/verify scripts in `scripts/pi2-armv7/` and the raw
-hardware log in `docs/armv7-pi2b-verification.md`. Measured: `pi --version` 0.87.1, startup 4.75–4.92 s,
-node RSS 40 MiB, no OOM, ~156 MB for the package.
+hardware log in `docs/armv7-pi2b-verification.md`. Measured: `pi --version` 0.99.2, startup 4.89 s (4.80–5.04 s on re-runs),
+node RSS 39 MiB, no OOM, ~168 MB for the package.

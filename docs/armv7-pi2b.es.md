@@ -9,7 +9,7 @@ solo añade dos pequeños cambios "habilitadores" para que «compilar desde el c
 [Qué cambia esta rama](#4-qué-cambia-esta-rama)).
 
 - Placa objetivo: Raspberry Pi 2 Model B (armv7l, 4×900 MHz, 921 MiB de RAM), Raspbian GNU/Linux 13 (trixie)
-- Medición: **2026-09-23 con `@earendil-works/pi-coding-agent@0.87.1`** (ciclo anterior: 2026-09-22, 0.87.0)
+- Medición: **2026-10-01 con `@earendil-works/pi-coding-agent@0.99.2`** (ciclo anterior: 2026-10-01, 0.99.1)
 - Registro sin procesar: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md) (con
   [guía en español](armv7-pi2b-verification.es.md))
 - La evidencia son **mediciones reales de hardware**, no razonamientos estáticos: 11/11 comprobaciones
@@ -22,7 +22,7 @@ solo añade dos pequeños cambios "habilitadores" para que «compilar desde el c
 | --- | --- |
 | **Node 22 tiene compilaciones oficiales para armv7l; Node 23+ no** | `nodejs.org/dist/index.json`: las **35/35** versiones de v22 incluyen `linux-armv7l` (incluidas las 11 que son >= 22.19; la última es v22.23.2); ninguna de las 12 versiones más recientes (v23+) la incluye. Este repositorio exige `engines.node >= 22.19.0` → **solo la línea v22 lo cumple** |
 | **Los binarios precompilados oficiales no incluyen armv7** | Los recursos de la versión son solo `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64`, y `build-binaries.yml` contempla exactamente esos cuatro casos → el tarball oficial **no sirve** |
-| **La ruta del paquete npm no tiene obstáculo nativo** | `@earendil-works/pi-coding-agent@0.87.1`: **sin restricción `os`/`cpu`**, incluye una CLI ya empaquetada (`dist/bundle/*.js`), sus dependencias son JS puro o wasm (`photon-node` incluye `photon_rs_bg.wasm`), `canvas` solo está en `devDependencies` y el backend de sesión usa el `node:sqlite` integrado |
+| **La ruta del paquete npm no tiene obstáculo nativo** | `@earendil-works/pi-coding-agent@0.99.2`: **sin restricción `os`/`cpu`**, incluye una CLI ya empaquetada (`dist/bundle/*.js`), sus dependencias son JS puro o wasm (`photon-node` incluye `photon_rs_bg.wasm`), `canvas` solo está en `devDependencies` y el backend de sesión usa el `node:sqlite` integrado |
 
 La única pérdida funcional: el helper nativo X11/portapapeles de la TUI (`linux-platform-x11.node`)
 solo existe precompilado para x64/arm64, y el cargador `packages/tui/src/native-platform.ts` devuelve
@@ -31,7 +31,7 @@ solo existe precompilado para x64/arm64, y el cargador `packages/tui/src/native-
 **degradación prevista y documentada**: nada se cae, solo se pierde la integración con portapapeles e
 imágenes.
 
-Medido en la placa con el paquete 0.87.1 ya instalado:
+Medido en la placa con el paquete 0.99.2 ya instalado:
 
 ```text
 process.arch = arm, process.platform = linux
@@ -47,15 +47,16 @@ getNativePlatformHelper() -> undefined
 | Identidad | uid 1000, **sin sudo en ningún momento** (todo en `$HOME`) |
 | Node | **v22.23.2** (tarball oficial `linux-armv7l`, 26.338.176 bytes) |
 | `node:sqlite` | **disponible** → el backend de sesión no necesita módulos nativos |
-| CLI | **`pi --version` → 0.87.1**; `pi --help` imprime con normalidad |
-| Instalación npm | `changed 119 packages in 3m` (npm 10.9.8) |
+| CLI | **`pi --version` → 0.99.2**; `pi --help` imprime con normalidad |
+| Instalación npm | `added 122 packages in 2m` (npm 10.9.8) |
 | Precompilados incluidos | solo `darwin-arm64|x64`, `linux-arm64|x64`, `win32-arm64|x64` — **ningún `linux-arm` (armv7)** |
-| Arranque | `pi --version` **4,75–4,92 s** (arranque en frío de la Pi2B, cuatro ejecuciones) |
-| Memoria | RSS base de `node` **40 MiB**; 640 MiB disponibles durante la instalación, sin OOM |
-| Disco | Node 187 MB + paquete pi 156 MB (6,2 GB libres en `$HOME`) |
+| Arranque | `pi --version` **4,80–5,04 s** (arranque en frío de la Pi2B, cuatro ejecuciones) |
+| Memoria | RSS base de `node` **39 MiB**; 734 MiB disponibles durante la instalación, sin OOM |
+| Disco | Node 187 MB + paquete pi 168 MB (5,8 GB libres en `$HOME`) |
 
 > Limitación conocida: **la CLI en sí está verificada**, pero un turno real de modelo necesita una clave
-> de API o un endpoint compatible con OpenAI en la misma red (por ejemplo LM Studio). La aceptación de
+> de API o un servidor de modelos local propio (la ruta local integrada de pi 0.99.2 es el router de
+> llama.cpp vía `LLAMA_BASE_URL`; no usa la API compatible con OpenAI de LM Studio). La aceptación de
 > esta rama no cubre ese paso.
 
 ## 3. Instalación y uso
@@ -72,7 +73,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 0.87.1
+pi --version                 # 0.99.2
 
 # 3) Persistencia (añadir a ~/.bashrc)
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -142,8 +143,8 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   «`node_modules` no debe contener ningún `.node`», lo cual es incorrecto: el paquete incluye
   legítimamente precompilados de otras plataformas. El invariante correcto es «**no existe un
   precompilado específico de ARMv7** *y* la CLI arranca».
-- **Los metadatos del paquete 0.87.1 se revalidaron**: sigue sin restricción `os`/`cpu` y `pi-tui` sigue
+- **Los metadatos del paquete 0.99.2 se revalidaron**: sigue sin restricción `os`/`cpu` y `pi-tui` sigue
   incluyendo exactamente seis precompilados (x64/arm64 para darwin/linux/win32), sin `linux-arm`.
-- **La sincronización con upstream no toca el trabajo de ARMv7**: tras fusionar upstream `898ab8040`
-  (v0.87.1), los nueve archivos de ARMv7 son idénticos byte a byte y la única diferencia del árbol
-  fusionado con upstream es exactamente ese delta de ARMv7.
+- **La sincronización con upstream no toca el trabajo de ARMv7**: tras fusionar upstream `005af57d88`
+  (v0.99.2), los 20 archivos del delta de ARMv7 son idénticos byte a byte; upstream no tocó ninguno en
+  esta sincronización y `packages/tui/src/native-platform.ts` conserva el permiso `arm`.

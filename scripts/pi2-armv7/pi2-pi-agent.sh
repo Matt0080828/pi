@@ -36,6 +36,9 @@ probe() {
     return 1
   fi
   timeout 60 $SSH "$HOST" '
+    # the login PATH is not set in a non-interactive SSH shell: bring in what the installer uses,
+    # otherwise an already-installed node/npm/pi is reported as "not installed"
+    export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
     echo "  ✓ 已連線: $(hostname)  $(uname -m)  $( (. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME") || echo "?" )"
     echo "    node: $(command -v node >/dev/null 2>&1 && node -v || echo "（未安裝）")"
     echo "    npm : $(command -v npm  >/dev/null 2>&1 && npm -v  || echo "（未安裝）")"
@@ -72,8 +75,12 @@ install() {
       || echo "  ⚠ scp tarball 失敗 → Pi2 會自己下載"
   fi
   LOG="$LOGDIR/install-$(date +%Y%m%d-%H%M%S).log"
+  # Forward PI_PKG when the caller set it, so a run against a specific published version is
+  # reproducible instead of silently falling back to the installer's pinned default.
+  PKGARG=""
+  if [ -n "${PI_PKG:-}" ]; then PKGARG="PI_PKG='$PI_PKG'"; echo "  target package: $PI_PKG（由環境變數 PI_PKG 指定）"; fi
   # generous: npm install over a Pi2's link is slow
-  timeout 3000 $SSH "$HOST" "NODE_TARBALL=/tmp/$TB bash /tmp/install-pi-on-pi2.sh" 2>&1 | tee "$LOG"
+  timeout 3000 $SSH "$HOST" "NODE_TARBALL=/tmp/$TB $PKGARG bash /tmp/install-pi-on-pi2.sh" 2>&1 | tee "$LOG"
   echo
   echo "  記錄寫入 $LOG"
   ln -sf "$(basename "$LOG")" "$LOGDIR/latest.log"

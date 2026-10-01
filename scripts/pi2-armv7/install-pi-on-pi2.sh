@@ -8,12 +8,12 @@
 #   ./install-pi-on-pi2.sh --dry-run    # print what would happen, change nothing
 #   ./install-pi-on-pi2.sh --check-only # no installs, just inspect what is already there
 #
-# Facts this is built on (measured 2026-09-21, not assumed):
+# Facts this is built on (measured 2026-09-21; re-verified 2026-10-01 for 0.99.2, not assumed):
 #   * nodejs.org ships linux-armv7l for every v22 release (35/35, incl. all >= 22.19, latest
 #     v22.23.2). v23 and later do NOT ship armv7 - so pin 22.
-#   * earendil-works/pi publishes no armv7 binary: v0.87.1 assets are linux-x64, linux-arm64,
+#   * earendil-works/pi publishes no armv7 binary: v0.99.2 assets are linux-x64, linux-arm64,
 #     darwin-x64/arm64, windows-x64/arm64 only. Use the npm package, not the tarball.
-#   * @earendil-works/pi-coding-agent@0.87.1 has no os/cpu restriction, ships a prebuilt bundle
+#   * @earendil-works/pi-coding-agent@0.99.2 has no os/cpu restriction, ships a prebuilt bundle
 #     (dist/bundle/*.js) and depends on plain JS + one wasm package (photon-node has
 #     photon_rs_bg.wasm). `canvas` is only a devDependency. The only native piece is the TUI's
 #     linux-platform-x11.node, which its loader skips on any arch that is not x64/arm64.
@@ -26,7 +26,7 @@ NODE_LINK="$HOME/opt/node22"
 NODE_URL="https://nodejs.org/dist/v$NODE_VER/node-v$NODE_VER-linux-armv7l.tar.xz"
 # optional: a tarball already fetched elsewhere (the PC can download it much faster than the board)
 NODE_TARBALL="${NODE_TARBALL:-}"
-PI_PKG="${PI_PKG:-@earendil-works/pi-coding-agent@0.87.1}"
+PI_PKG="${PI_PKG:-@earendil-works/pi-coding-agent@0.99.2}"
 NPM_PREFIX="$HOME/.local"
 LOG="pi2-pi-install-$(date +%Y%m%d-%H%M%S).log"
 
@@ -178,7 +178,7 @@ step "5) 接下來（可選，需要你的 API key 或本機端點）"
 cat <<EOF
     export PATH="$NODE_LINK/bin:$NPM_PREFIX/bin:\$PATH"     # 加進 ~/.bashrc 才會持久
     pi --version
-    # 真實回合（需要金鑰；或指向本機 OpenAI 相容端點，例：LM Studio）
-    OPENAI_API_KEY=... pi "hello"
+    # 真實回合（需要 API 金鑰；本機端點走 pi 內建的 llama.cpp router，不吃 LM Studio 的 OpenAI 相容 API）
+    LLAMA_BASE_URL=http://<同一網段的機器>:8080 pi "hello"   # 由 pi 的 llama.cpp 擴充使用
 EOF
 printf '\n完成。記錄檔請用 --check-only 重跑輸出存證。\n'

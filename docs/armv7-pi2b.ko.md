@@ -8,7 +8,7 @@
 경우가 아키텍처 때문에 막히지 않게 하는 것입니다(아래 "이 브랜치의 변경").
 
 - 대상 보드: Raspberry Pi 2 Model B(armv7l, 4×900 MHz, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
-- 계측일: **2026-09-23(`@earendil-works/pi-coding-agent@0.87.1`)**｜이전 사이클은 2026-09-22의 0.87.0
+- 계측일: **2026-10-01(`@earendil-works/pi-coding-agent@0.99.2`)**｜이전 사이클은 2026-10-01의 0.99.1
 - 원본 로그: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)([한국어 해설](armv7-pi2b-verification.ko.md) 포함)
 - 근거는 **실기 계측**이며 정적 추론이 아닙니다: 승인 검사 11/11 통과
 
@@ -20,7 +20,7 @@
 | --- | --- |
 | **Node 22에는 공식 armv7l 빌드가 있고 Node 23 이상에는 없다** | `nodejs.org/dist/index.json`: v22는 **35/35** 모든 릴리스가 `linux-armv7l`을 포함(22.19 이상 11개 포함, 최신 v22.23.2). 최근 12개 릴리스(v23 이상)에는 없음. 이 저장소는 `engines.node >= 22.19.0`을 요구 → **v22 계열에서만 충족** |
 | **공식 사전 빌드 바이너리에 armv7이 없다** | 릴리스 자산은 `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64`뿐이고 `build-binaries.yml`의 플랫폼 분기도 같은 네 가지뿐 → 공식 tarball은 **사용 불가** |
-| **npm 패키지 경로에는 네이티브 장애물이 없다** | `@earendil-works/pi-coding-agent@0.87.1`: **`os`/`cpu` 제한 없음**, 사전 빌드 CLI 포함(`dist/bundle/*.js`), 의존성은 순수 JS 또는 wasm(`photon-node`가 `photon_rs_bg.wasm` 포함), `canvas`는 `devDependencies`만, 세션 백엔드는 Node 내장 `node:sqlite` |
+| **npm 패키지 경로에는 네이티브 장애물이 없다** | `@earendil-works/pi-coding-agent@0.99.2`: **`os`/`cpu` 제한 없음**, 사전 빌드 CLI 포함(`dist/bundle/*.js`), 의존성은 순수 JS 또는 wasm(`photon-node`가 `photon_rs_bg.wasm` 포함), `canvas`는 `devDependencies`만, 세션 백엔드는 Node 내장 `node:sqlite` |
 
 유일한 기능 손실: TUI의 네이티브 X11/클립보드 helper(`linux-platform-x11.node`)는 x64/arm64
 사전 빌드만 있고, 로더 `packages/tui/src/native-platform.ts`는 다른 아키텍처에서 `undefined`를
@@ -28,7 +28,7 @@
 tools when native reads are unavailable"라고 적고 있으므로 armv7에서 이것은 **설계상 허용된 성능 저하**입니다.
 (크래시는 없고 클립보드/이미지 연동만 사라집니다.)
 
-설치된 0.87.1로 보드에서 직접 측정:
+설치된 0.99.2로 보드에서 직접 측정:
 
 ```text
 process.arch = arm, process.platform = linux
@@ -44,15 +44,16 @@ getNativePlatformHelper() -> undefined
 | 실행 사용자 | uid 1000, **sudo 전혀 사용 안 함** (`$HOME`에 설치) |
 | Node | **v22.23.2** (공식 `linux-armv7l` tarball, 26,338,176 bytes) |
 | `node:sqlite` | **사용 가능** → 세션 백엔드에 네이티브 모듈 불필요 |
-| CLI | **`pi --version` → 0.87.1**, `pi --help` 정상 출력 |
-| npm 설치 | `changed 119 packages in 3m` (npm 10.9.8) |
+| CLI | **`pi --version` → 0.99.2**, `pi --help` 정상 출력 |
+| npm 설치 | `added 122 packages in 2m` (npm 10.9.8) |
 | 동봉 사전 빌드 | `darwin-arm64|x64`, `linux-arm64|x64`, `win32-arm64|x64`뿐 —— **`linux-arm`(armv7) 없음** |
-| 시작 시간 | `pi --version` **4.75–4.92초** (Pi2B 콜드 스타트, 4회 측정) |
-| 메모리 | `node` 기준 RSS **40 MiB** (설치 중 여유 640 MiB, OOM 없음) |
-| 디스크 | Node 187 MB + pi 패키지 156 MB (`$HOME` 여유 6.2 GB) |
+| 시작 시간 | `pi --version` **4.80–5.04초** (Pi2B 콜드 스타트, 4회 측정) |
+| 메모리 | `node` 기준 RSS **39 MiB** (설치 중 여유 734 MiB, OOM 없음) |
+| 디스크 | Node 187 MB + pi 패키지 168 MB (`$HOME` 여유 5.8 GB) |
 
-> 알려진 한계: **CLI 자체는 검증되었지만** 실제 모델 1턴은 API 키나 같은 LAN의 LM Studio 같은
-> OpenAI 호환 엔드포인트가 필요하며, 이 브랜치의 승인 검사는 그 단계를 포함하지 않습니다.
+> 알려진 한계: **CLI 자체는 검증되었지만** 실제 모델 1턴은 API 키나 자체 로컬 모델 서버가 필요합니다
+> (pi 0.99.2의 내장 로컬 경로는 `LLAMA_BASE_URL`로 지정하는 llama.cpp router이며, LM Studio의
+> OpenAI 호환 API는 사용하지 않습니다). 이 브랜치의 승인 검사는 그 단계를 포함하지 않습니다.
 
 ## 3. 설치와 사용
 
@@ -68,7 +69,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 0.87.1
+pi --version                 # 0.99.2
 
 # 3) 영구 적용 (~/.bashrc에 추가)
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -135,7 +136,8 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   tarball은 압축을 풀면 디렉터리 이름에 `v`가 남습니다(`node-v22.23.2-linux-armv7l`). 또 처음에 승인 조건을
   "`node_modules`에 `.node`가 전혀 없어야 한다"고 적은 것은 잘못이었습니다 —— 패키지는 다른 플랫폼의
   사전 빌드를 정당하게 동봉합니다. 올바른 불변식은 "**armv7 전용 사전 빌드가 없음** *그리고* CLI가 시작함"입니다.
-- **0.87.1 패키지 메타데이터도 다시 확인했습니다**: 여전히 `os`/`cpu` 제한 없음, `pi-tui`의 사전 빌드는
+- **0.99.2 패키지 메타데이터도 다시 확인했습니다**: 여전히 `os`/`cpu` 제한 없음, `pi-tui`의 사전 빌드는
   여전히 x64/arm64 6개뿐(`linux-arm` 없음).
-- **업스트림 동기화는 ARMv7 작업에 영향을 주지 않습니다**: 업스트림 `898ab8040`(v0.87.1)을 병합한 뒤에도
-  ARMv7 9개 파일은 바이트 단위로 동일했고, 병합된 트리와 업스트림의 차이는 정확히 그 9개 파일뿐입니다.
+- **업스트림 동기화는 ARMv7 작업에 영향을 주지 않습니다**: 업스트림 `005af57d88`(v0.99.2)을 병합한 뒤에도
+  ARMv7 delta 20개 파일 모두가 바이트 단위로 동일합니다(이번 동기화에서 업스트림이 건드린 파일은 없고,
+  `packages/tui/src/native-platform.ts`도 `arm` 허용을 유지).

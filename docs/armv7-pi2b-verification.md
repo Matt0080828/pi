@@ -10,14 +10,13 @@
 > [Español](armv7-pi2b-verification.es.md)
 
 Raw output of `scripts/pi2-armv7/pi2-pi-agent.sh all` (probe → install → verify) driven from the PC
-against the Pi 2B on 2026-09-23, installing `@earendil-works/pi-coding-agent@0.87.1`:
+against the Pi 2B on 2026-10-01, installing `@earendil-works/pi-coding-agent@0.99.2`:
 
 ```text
-
 === 0) 基本環境
     uname -m = armv7l  |  Raspbian GNU/Linux 13 (trixie)
-    mem: 921 MiB total, 640 MiB available
-    disk $HOME: 6.2G free
+    mem: 921 MiB total, 734 MiB available
+    disk $HOME: 5.8G free
   ✓ 架構是 armv7l（Pi2B）
   ✓ 以一般使用者執行（uid 1000），全程安裝到 $HOME，不需要 sudo
   ✓ 下載工具：curl
@@ -31,15 +30,15 @@ against the Pi 2B on 2026-09-23, installing `@earendil-works/pi-coding-agent@0.8
     npm 10.9.8  |  目標 prefix: /home/<user>/.local
 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
 
-changed 119 packages in 3m
+added 122 packages in 2m
 
 9 packages are looking for funding
   run `npm fund` for details
-  ✓ 已安裝 @earendil-works/pi-coding-agent@0.87.1 到 /home/<user>/.local
+  ✓ 已安裝 @earendil-works/pi-coding-agent@0.99.2 到 /home/<user>/.local
 
 === 3) 驗收（可量測的項目）
   ✓ pi 執行檔存在：/home/<user>/.local/bin/pi
-    pi --version → 0.87.1
+    pi --version → 0.99.2
     pi --help   → pi - AI coding assistant with read, bash, edit, write tools  Usage: 
   套件內附的 prebuild（其他平台，armv7 不會載入）：
     @earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-tui/native/darwin/prebuilds/darwin-arm64/darwin-platform.node
@@ -52,15 +51,15 @@ changed 119 packages in 3m
   ✓ （真正的證明：pi --version 已在上面正常輸出 ✓）
 
 === 4) 量測（給日後比對用）
-    pi --version 耗時 4.92 s
-    node RSS 基準: 40 MiB
-    磁碟：Node 187M｜pi 套件 156M（注意：/home/<user>/.local 可能與其他工具共用，勿整包刪）
+    pi --version 耗時 4.89 s
+    node RSS 基準: 39 MiB
+    磁碟：Node 187M｜pi 套件 168M（注意：/home/<user>/.local 可能與其他工具共用，勿整包刪）
 
 === 5) 接下來（可選，需要你的 API key 或本機端點）
     export PATH="/home/<user>/opt/node22/bin:/home/<user>/.local/bin:$PATH"     # 加進 ~/.bashrc 才會持久
     pi --version
-    # 真實回合（需要金鑰；或指向本機 OpenAI 相容端點，例：LM Studio）
-    OPENAI_API_KEY=... pi "hello"
+    # 真實回合（需要 API 金鑰；本機端點走 pi 內建的 llama.cpp router，不吃 LM Studio 的 OpenAI 相容 API）
+    LLAMA_BASE_URL=http://<同一網段的機器>:8080 pi "hello"   # 由 pi 的 llama.cpp 擴充使用
 
 完成。記錄檔請用 --check-only 重跑輸出存證。
 ```
@@ -85,16 +84,16 @@ against the log above:
 ✅ 全部驗收項目通過（實機量測，非推論）
 ```
 
-Independent re-measurement after the install (three further `pi --version` runs, same board, 0.87.1):
+Independent re-measurement after the install (three further `pi --version` runs, same board, 0.99.2):
 
 ```text
-  run1: 4.75 s (0.87.1)
-  run2: 4.83 s (0.87.1)
-  run3: 4.81 s (0.87.1)
-  node RSS: 40 MiB
-  free: 655 MiB available
-  disk HOME: 6.2G
+  run1: 5.04 s (0.99.2)
+  run2: 4.99 s (0.99.2)
+  run3: 4.80 s (0.99.2)
+  node RSS: 39 MiB
+  free: 725 MiB available
+  disk HOME: 5.6G
 ```
 
-For reference, the previous cycle (2026-09-22, `--check-only`, 0.87.0) measured startup 4.68-5.13 s
-and 6.4 GB free; the 0.87.1 numbers above are a fresh install, not a re-read of that log.
+For reference, the previous cycle (earlier the same day, 2026-10-01, `all`, 0.99.1) measured
+startup 4.79 s and 5.8 GB free; the 0.99.2 numbers above are a fresh install, not a re-read of that log.

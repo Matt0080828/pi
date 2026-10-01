@@ -8,7 +8,7 @@ so that "building from source on ARMv7" and "a future ARMv7 native helper" are n
 architecture (see [What this fork changes](#4-what-this-fork-changes)).
 
 - Target board: Raspberry Pi 2 Model B (armv7l, 4x900 MHz, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
-- Measured: **2026-09-23 with `@earendil-works/pi-coding-agent@0.87.1`** (previous cycle: 2026-09-22, 0.87.0)
+- Measured: **2026-10-01 with `@earendil-works/pi-coding-agent@0.99.2`** (previous cycle: 2026-10-01, 0.99.1)
 - Raw board log: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md) — with an English guide to
   the same log: [`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)
 - The evidence is **hardware measurement, not static reasoning**: 11/11 acceptance checks passed
@@ -22,7 +22,7 @@ architecture (see [What this fork changes](#4-what-this-fork-changes)).
 | --- | --- |
 | **Node 22 has official armv7l builds; Node 23+ does not** | `nodejs.org/dist/index.json`: every v22 release ships `linux-armv7l` (**35/35**, including all 11 releases >= 22.19, latest v22.23.2); none of the 12 most recent releases (v23+) do. This repo requires `engines.node >= 22.19.0` → **only the v22 line satisfies it** |
 | **The official prebuilt binaries contain no armv7** | Release assets are `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64` only, and `build-binaries.yml` lists exactly those four platform cases → the official tarball is **not usable** |
-| **The npm package route has no native obstacle** | `@earendil-works/pi-coding-agent@0.87.1`: **no `os`/`cpu` restriction**, ships a prebuilt CLI (`dist/bundle/*.js`), depends only on plain JS or wasm (`photon-node` carries `photon_rs_bg.wasm`), `canvas` is a `devDependency` only, and the session backend uses Node's built-in `node:sqlite` |
+| **The npm package route has no native obstacle** | `@earendil-works/pi-coding-agent@0.99.2`: **no `os`/`cpu` restriction**, ships a prebuilt CLI (`dist/bundle/*.js`), depends only on plain JS or wasm (`photon-node` carries `photon_rs_bg.wasm`), `canvas` is a `devDependency` only, and the session backend uses Node's built-in `node:sqlite` |
 
 The only functional loss: the TUI's native X11/clipboard helper (`linux-platform-x11.node`) ships
 prebuilds for x64/arm64 only, and the loader `packages/tui/src/native-platform.ts` returns `undefined`
@@ -30,7 +30,7 @@ for any other architecture. `packages/tui/native/linux/README.md` states this it
 falls back to command-line tools when native reads are unavailable" — so on ARMv7 this is a
 **documented, intentional degradation**: nothing crashes, it just loses clipboard/image integration.
 
-Measured on the board with the installed 0.87.1 package (armv7l):
+Measured on the board with the installed 0.99.2 package (armv7l):
 
 ```text
 process.arch = arm, process.platform = linux
@@ -46,16 +46,17 @@ getNativePlatformHelper() -> undefined
 | Identity | uid 1000, **no sudo anywhere** (installed into `$HOME`) |
 | Node | **v22.23.2** (official `linux-armv7l` tarball, 26,338,176 bytes) |
 | `node:sqlite` | **available** → the session backend needs no native module |
-| CLI | **`pi --version` → 0.87.1**; `pi --help` prints normally |
-| npm install | `changed 119 packages in 3m` (npm 10.9.8) |
+| CLI | **`pi --version` → 0.99.2**; `pi --help` prints normally |
+| npm install | `added 122 packages in 2m` (npm 10.9.8) |
 | Bundled prebuilds | only `darwin-arm64|x64`, `linux-arm64|x64`, `win32-arm64|x64` — **no `linux-arm` (armv7)** |
-| Startup | `pi --version` **4.75-4.92 s** (Pi2B cold start, four runs) |
-| Memory | `node` baseline RSS **40 MiB**; 640 MiB available during install, no OOM |
-| Disk | Node 187 MB + pi package 156 MB (6.2 GB free in `$HOME`) |
+| Startup | `pi --version` **4.80-5.04 s** (Pi2B cold start, four runs) |
+| Memory | `node` baseline RSS **39 MiB**; 734 MiB available during install, no OOM |
+| Disk | Node 187 MB + pi package 168 MB (5.8 GB free in `$HOME`) |
 
 > Known limitation: the **CLI itself is verified**, but a real model turn needs an API key or a local
-> OpenAI-compatible endpoint (for example LM Studio on the same LAN). This branch's acceptance does not
-> cover that step.
+> model server of your own — pi 0.99.2's built-in local path is the llama.cpp router addressed through
+> `LLAMA_BASE_URL` (it does not talk to LM Studio's OpenAI-compatible API). This branch's acceptance
+> does not cover that step.
 
 ## 3. Install and use
 
@@ -71,7 +72,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 0.87.1
+pi --version                 # 0.99.2
 
 # 3) Persist it (append to ~/.bashrc)
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -140,12 +141,12 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   "`node_modules` must contain no `.node` at all", which is wrong — the package legitimately ships
   other platforms' prebuilds. The correct invariant is "**no ARMv7-specific prebuild** exists *and* the
   CLI starts".
-- **Package metadata was re-checked before restating the claim for 0.87.1**: still no `os`/`cpu`
+- **Package metadata was re-checked before restating the claim for 0.99.2**: still no `os`/`cpu`
   restriction, and `pi-tui` still ships exactly six prebuilds (x64/arm64 for darwin/linux/win32) with no
   `linux-arm`.
-- **The upstream sync does not touch the ARMv7 work**: after merging upstream `898ab8040` (v0.87.1), the
-  nine ARMv7 files are byte-identical, and the merged tree's only difference from upstream is exactly
-  that ARMv7 delta.
+- **The upstream sync does not touch the ARMv7 work**: after merging upstream `005af57d88` (v0.99.2), all 20 ARMv7 delta files are byte-identical to the
+  pre-merge branch; upstream touched none of them in this cycle, and `packages/tui/src/native-platform.ts`
+  keeps the `arm` allowance.
 
 ---
 
