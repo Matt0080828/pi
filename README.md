@@ -51,6 +51,9 @@ The TUI's X11/clipboard helper is x64/arm64-only and is skipped by design on oth
 - Hardware measurements and how to install: [`docs/armv7-pi2b.md`](docs/armv7-pi2b.md) —
   also available as [English](docs/armv7-pi2b.en.md) / [简体中文](docs/armv7-pi2b.zh-CN.md) /
   [日本語](docs/armv7-pi2b.ja.md) / [한국어](docs/armv7-pi2b.ko.md) / [Español](docs/armv7-pi2b.es.md)
+- Board-local model turns (verified on the board, 2026-10-01): the Pi runs its own cross-built
+  `llama-server` in llama.cpp router mode and pi answers real turns with no PC and no external API —
+  recipe and measurements in [`docs/armv7-pi2b.md`](docs/armv7-pi2b.md) §7.
 - Raw verification output from the board: [`docs/armv7-pi2b-verification.md`](docs/armv7-pi2b-verification.md) — guides:
   [English](docs/armv7-pi2b-verification.en.md) / [简体中文](docs/armv7-pi2b-verification.zh-CN.md) /
   [日本語](docs/armv7-pi2b-verification.ja.md) / [한국어](docs/armv7-pi2b-verification.ko.md) /

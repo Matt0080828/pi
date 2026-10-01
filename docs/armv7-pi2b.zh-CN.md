@@ -49,9 +49,9 @@ getNativePlatformHelper() -> undefined
 | 内存 | `node` 基准 RSS **39 MiB**；安装时整机可用 734 MiB，未 OOM |
 | 磁盘 | Node 187 MB ＋ pi 包 168 MB（`$HOME` 尚有 5.8 GB） |
 
-> 已知限制：**CLI 本身已验证**，但一次「真实模型回合」需要 API 密钥或自架的本机模型伺服器
-> （0.99.2 的内建本机路径是 `LLAMA_BASE_URL` 指向的 llama.cpp router，不是 LM Studio 的 OpenAI
-> 兼容 API），本分支的验收没有涵盖该项。
+> 真实模型回合：**已于 2026-10-01 在板子上实机验证**（板子自己跑 `llama-server`，不需要 PC 或
+> 外部 API），做法与实测值见第 8 节。0.99.2 的内建本机路径仍是 `LLAMA_BASE_URL` 指向的
+> llama.cpp router（不是 LM Studio 的 OpenAI 兼容 API）。
 
 ## 3. 安装与使用
 
@@ -134,3 +134,25 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
 - **0.99.2 的包元数据重新查过**：仍无 `os`/`cpu` 限制，`pi-tui` 仍只附 6 个 x64/arm64 prebuild（没有 `linux-arm`）。
 - **上游同步不影响 ARMv7 工作**：合并上游 `005af57d88`（v0.99.2）后，20 个 ARMv7 delta 文件全部逐位元不变
   （本轮上游没有改动其中任何一个，`packages/tui/src/native-platform.ts` 也保留 `arm` 许可）。
+
+## 8. 板子自足的真实模型回合（已实机验证，2026-10-01）
+
+pi 0.99.2 在 Pi 2B 上用**板子自己执行的模型与伺服器**完成了真实回合，不需要 PC、也不需要外部 API：
+
+- **交叉编译 `llama-server`**：板子没有 cmake、PC 没有交叉工具链时，用 `apt-get download` ＋
+  `dpkg -x` 把 Ubuntu 的 armhf-cross `.deb` 解到 `$HOME`（免 sudo）；`as` 需要
+  `LD_LIBRARY_PATH=<prefix>/usr/lib/x86_64-linux-gnu`，链接要加 `--sysroot=<prefix>` 与
+  `-static-libstdc++ -static-libgcc`。实测产物 13.5 MB，板上 `llama-server --version` =
+  `0.3.0-dev (build 10734)`。
+- **用 router 模式启动**：`llama-server --models-preset <ini>`。必须走 `--models-preset`
+  （`source=preset`）；`--models-dir` 会回 `source=models_dir`，被 pi 的 `modelIsSelectable()`
+  滤掉（症状：`/models` 看得到、pi 却说 Unknown provider）。
+- **`~/.pi/agent/models.json` 的 `contextWindow` 必须大于「提示 + 输出上限 + 4096」**：
+  `clampMaxTokensToContext()` 会算 `contextWindow − 提示 − 4096` 并夹到下限 1，声明太小会让 pi
+  送出 `max_completion_tokens: 1`，只生一个 token 就 `finish_reason=length`。本实测：声明 8192、
+  输出上限 512、router `ctx-size` 同步 8192（KV 用 q8_0）。
+- **另两个坑**：`auth.json` 内的凭据 URL **优先于** `LLAMA_BASE_URL`；pi 在 stdin 非 TTY 时会
+  吃掉 stdin，远程要写 `< /dev/null`。
+- **实测值**（`-t 4`、8K ctx）：270M Q4 提示 10.95 tok/s、生成 2.76 tok/s、单回合 46 s；0.5B Q4
+  首回合 77 s（`stopReason: stop`）、暖机后 16 s；llama-server RSS 530 MiB、板子可用 636 MiB。
+- 注意：**链路**已验证，不代表小模型答得对（0.5B 事实正确率很差）。

@@ -65,3 +65,68 @@
   出して **0** で終了。ボード上での**ソースからの全ビルド**は依然として未検証です。
 
 完全な手順書は [`armv7-pi2b.ja.md`](armv7-pi2b.ja.md)、繁体字版は [`armv7-pi2b.md`](armv7-pi2b.md)。
+
+## 板の上だけで完結する実モデル 1 ターン（2026-10-01）
+
+クロスビルド、板上の router、実際の pi 1 ターン 2 回の生の出力です（モデルもサーバーも板の上）。手順は `armv7-pi2b.ja.md` 第 8 節。
+
+```text
+=== host: cross toolchain without sudo + llama-server build ===
+  arm-linux-gnueabihf-gcc 11.4.0   (sysroot 2.35, target ld-linux-armhf.so.3)
+  source: llama.cpp @ 121201a7b, cmake 3.22 toolchain file (no CMakePresets v4)
+  flags: -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
+         -DGGML_NATIVE=OFF -DGGML_NEON=ON -DGGML_CPU_ARM_ARCH=armv7-a -DGGML_OPENMP=ON -DLLAMA_CURL=OFF
+         -static-libstdc++ -static-libgcc
+  bin/llama-server  13.5 MB
+  ELF 32-bit LSB pie executable, ARM, EABI5 version 1 (GNU/Linux), dynamically linked,
+      interpreter /lib/ld-linux-armhf.so.3, for GNU/Linux 3.2.0
+  NEEDED: libgomp.so.1, libm.so.6, libc.so.6, ld-linux-armhf.so.3
+
+=== board: llama-server --version ===
+  version: 0.3.0-dev (build 10734, commit 121201a7b)
+  built with GNU 11.4.0 for Linux arm
+
+=== board: router mode (llama-server --models-preset <ini>) ===
+  load_models: Loaded 2 local model presets from /home/<user>/models
+  Available models (2) (*: custom preset)
+      functiongemma-270m-it-q4_k_m
+      qwen2.5-0.5b-instruct-q4_k_m
+  llama_server:     router mode
+
+=== board: GET /models and /props ===
+  functiongemma-270m-it-q4_k_m   status=unloaded  source=preset
+  qwen2.5-0.5b-instruct-q4_k_m   status=unloaded  source=preset
+  /props -> {"role":"router","max_instances":4,"models_autoload":true,"model_path":"none", ...}
+
+=== board: pi real turn 1 - 270M Q4_K_M (46 s wall) ===
+  slot print_timing: id  3 | task 0 | prompt eval time =  6577.32 ms /  72 tokens ( 10.95 tokens per second)
+  slot print_timing: id  3 | task 0 |        eval time =  6877.79 ms /  20 tokens (  2.76 tokens per second)
+  slot print_timing: id  3 | task 0 |       total time = 13455.10 ms /  92 tokens
+  pi rc=0  wall=46s   (answer printed; 20 generated tokens, finish_reason=stop)
+
+=== board: pi real turn 2 - 0.5B Q4_K_M, --mode json ===
+  pi rc=0  wall=77s
+  stopReason: stop | raw: stop
+  usage: input 55 output 19 total 74
+  answer: "台大山是台灣最高的山，海拔為1,253公尺。"
+  # the pipeline is what was verified; a 0.5B model's factual accuracy is not a pass criterion
+
+=== board: same loaded model, warm second turn ===
+  wall=16s   (prompt eval 11 tokens, eval 7 tokens)
+
+=== board: resources during the turns ===
+  Mem: 921 total / 636 available MiB
+  llama-server child RSS: 530 MiB
+  KV cache type k/v: q8_0, ctx-size 8192, threads 4
+```
+
+Two findings that made the difference and are worth keeping next to these numbers:
+
+- pi's router client only accepts models reported as `source=preset` (with `models_autoload: true`).
+  Starting `llama-server --models-dir` makes `/models` list them with `source=models_dir`, and pi then
+  reports `Unknown provider "llama.cpp"` because `modelIsSelectable()` filters them out.
+- `clampMaxTokensToContext()` (`packages/ai/src/api/simple-options.ts`, `CONTEXT_SAFETY_TOKENS = 4096`,
+  `MIN_MAX_TOKENS = 1`) computes `contextWindow - estimatedPrompt - 4096` and floors at 1. Declaring
+  `contextWindow: 2048` in `~/.pi/agent/models.json` therefore sent `max_completion_tokens: 1` and every
+  turn ended after a single token with `finish_reason=length`. Declaring 8192 (router `ctx-size` kept in
+  step, q8_0 KV) produced the turns above.

@@ -51,9 +51,9 @@ getNativePlatformHelper() -> undefined
 | メモリ | `node` の基準 RSS **39 MiB**（インストール時は空き 734 MiB、OOM なし） |
 | ディスク | Node 187 MB ＋ pi パッケージ 168 MB（`$HOME` の空き 5.8 GB） |
 
-> 既知の制限：**CLI 自体は検証済み**ですが、実際のモデル 1 ターンには API キーか、自前のローカル
-> モデルサーバーが必要です（pi 0.99.2 の内蔵ローカル経路は `LLAMA_BASE_URL` で指す llama.cpp router で、
-> LM Studio の OpenAI 互換 API は使いません）。このブランチの受け入れ検査はそこまで含みません。
+> 実際のモデル 1 ターン：**2026-10-01 に板の上で実機検証済み**です（板自身が `llama-server` を
+> 動かし、PC も外部 API も不要）。手順と実測値は第 8 節。pi 0.99.2 の内蔵ローカル経路は
+> `LLAMA_BASE_URL` で指す llama.cpp router のままです（LM Studio の OpenAI 互換 API は使いません）。
 
 ## 3. インストールと使い方
 
@@ -142,3 +142,27 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
 - **上流への同期は ARMv7 の作業に影響しません**：上流 `005af57d88`（v0.99.2）をマージした後も、
   ARMv7 delta の 20 ファイルすべてがバイト単位で同一です（今回の同期で上流はどれも触っておらず、
   `packages/tui/src/native-platform.ts` も `arm` 許可を保持しています）。
+
+## 8. 板の上だけで完結する実モデル 1 ターン（実機検証済み、2026-10-01）
+
+pi 0.99.2 は Pi 2B 上で、**モデルもサーバーも板自身で動かして**実際の 1 ターンを完了しました（PC も
+外部 API も不要）：
+
+- **`llama-server` のクロスビルド**：板に cmake がなく、ホストにクロスツールチェーンがない場合は、
+  Ubuntu の armhf-cross `.deb` を `apt-get download` ＋ `dpkg -x` で `$HOME` に展開します（sudo
+  不要）。`as` には `LD_LIBRARY_PATH=<prefix>/usr/lib/x86_64-linux-gnu` が必要で、リンクには
+  `--sysroot=<prefix>` と `-static-libstdc++ -static-libgcc` を付けます。実測 13.5 MB、板上の
+  `llama-server --version` は `0.3.0-dev (build 10734)`。
+- **router モードで起動**：`llama-server --models-preset <ini>`。`--models-preset` が必須です
+  （`source=preset` になる）。`--models-dir` は `source=models_dir` を返し、pi の
+  `modelIsSelectable()` に除外されます（症状：`/models` には出るのに pi は Unknown provider）。
+- **`~/.pi/agent/models.json` の `contextWindow` は「プロンプト + 最大出力 + 4096」より大きく**：
+  `clampMaxTokensToContext()` が `contextWindow − プロンプト − 4096` を計算し下限 1 で頭打ちに
+  するため、小さく宣言すると pi は `max_completion_tokens: 1` を送り、1 トークンで
+  `finish_reason=length` になります。本実測は 8192 宣言／出力上限 512／router `ctx-size` も 8192。
+- **他の 2 つの落とし穴**：`auth.json` のサーバー URL は `LLAMA_BASE_URL` より**優先**されます。
+  pi は stdin が TTY でないと stdin を読み取るため、リモートでは `< /dev/null` を付けてください。
+- **実測値**（`-t 4`、8K ctx、q8_0 KV）：270M Q4 はプロンプト 10.95 tok/s、生成 2.76 tok/s、1 ターン
+  46 秒。0.5B Q4 は初回 77 秒（`stopReason: stop`）、ウォーム後 16 秒。llama-server の RSS 530 MiB、
+  板の空き 636 MiB。
+- 注意：検証できたのは**経路**であり、小型モデルの事実精度ではありません（0.5B の回答は誤りでした）。

@@ -54,10 +54,9 @@ getNativePlatformHelper() -> undefined
 | Memoria | RSS base de `node` **39 MiB**; 734 MiB disponibles durante la instalación, sin OOM |
 | Disco | Node 187 MB + paquete pi 168 MB (5,8 GB libres en `$HOME`) |
 
-> Limitación conocida: **la CLI en sí está verificada**, pero un turno real de modelo necesita una clave
-> de API o un servidor de modelos local propio (la ruta local integrada de pi 0.99.2 es el router de
-> llama.cpp vía `LLAMA_BASE_URL`; no usa la API compatible con OpenAI de LM Studio). La aceptación de
-> esta rama no cubre ese paso.
+> Turno real de modelo: **verificado en la placa el 2026-10-01** (la Pi ejecuta su propio `llama-server`;
+> sin PC y sin API externa). Receta y mediciones: sección 8. La ruta local integrada de pi 0.99.2 sigue
+> siendo el router de llama.cpp vía `LLAMA_BASE_URL` (no usa la API compatible con OpenAI de LM Studio).
 
 ## 3. Instalación y uso
 
@@ -148,3 +147,32 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
 - **La sincronización con upstream no toca el trabajo de ARMv7**: tras fusionar upstream `005af57d88`
   (v0.99.2), los 20 archivos del delta de ARMv7 son idénticos byte a byte; upstream no tocó ninguno en
   esta sincronización y `packages/tui/src/native-platform.ts` conserva el permiso `arm`.
+
+## 8. Turnos de modelo locales a la placa (verificado en hardware real, 2026-10-01)
+
+pi 0.99.2 completó turnos reales en una Raspberry Pi 2 Model B con **el modelo y el servidor ejecutándose
+en la propia placa** - sin PC y sin API externa:
+
+- **Compilación cruzada de `llama-server`** cuando la placa no tiene cmake y el host no tiene toolchain
+  cruzada: descargar los `.deb` armhf-cross de Ubuntu con `apt-get download` y descomprimirlos en `$HOME`
+  con `dpkg -x` (sin sudo). El ensamblador necesita
+  `LD_LIBRARY_PATH=<prefix>/usr/lib/x86_64-linux-gnu` (ahí queda `libbfd-2.38-armhf.so`) y el enlazado
+  necesita `--sysroot=<prefix>` más `-static-libstdc++ -static-libgcc`. Artefacto medido: 13.5 MB; en la
+  placa `llama-server --version` informa `0.3.0-dev (build 10734)`.
+- **Ejecutarlo en modo router**: `llama-server --models-preset <ini>`. El preset es obligatorio (los
+  modelos reportan `source=preset`); con `--models-dir` reportan `source=models_dir` y
+  `modelIsSelectable()` de pi los filtra (síntoma: `/models` los lista pero pi dice "Unknown provider").
+- **Declara el proveedor y los modelos en `~/.pi/agent/models.json`, con `contextWindow` mayor que
+  prompt + salida máxima + 4096**: `clampMaxTokensToContext()` calcula
+  `contextWindow - prompt estimado - 4096` y aplica suelo 1, así que una ventana pequeña hace que pi
+  envíe `max_completion_tokens: 1` y el modelo pare tras un token con `finish_reason=length`. Valores
+  medidos: 8192 declarado, 512 de salida máxima, `ctx-size` del router también 8192 (q8_0 KV es lo que
+  permite 8K en 921 MiB).
+- **Otras dos trampas medidas**: la URL guardada en `~/.pi/agent/auth.json` **tiene prioridad** sobre la
+  variable `LLAMA_BASE_URL`; y pi consume stdin cuando no es un TTY, así que en remoto hay que usar
+  `pi ... < /dev/null`.
+- **Mediciones** (Pi 2B, `-t 4`, 8K ctx, q8_0 KV): 270M Q4 - prompt 10.95 tok/s, generación 2.76 tok/s,
+  46 s por turno; 0.5B Q4 - 77 s el primer turno (`stopReason: stop`), 16 s en caliente. RSS del hijo
+  llama-server 530 MiB, 636 MiB libres en la placa.
+- Nota: lo verificado es la **tubería**; no dice nada sobre la exactitud factual de un modelo pequeño
+  (las respuestas del 0.5B fueron incorrectas y no se oculta).

@@ -42,9 +42,9 @@ native reads are unavailable」——所以 armv7 上這是**設計允許的降�
 | 記憶體 | `node` 基準 RSS **39 MiB**；安裝時整機可用 734 MiB，未 OOM |
 | 磁碟 | Node 187 MB ＋ pi 套件 168 MB（`$HOME` 尚有 5.8 GB） |
 
-> 已知限制：**CLI 本身已驗證**，但一次「真實模型回合」需要 API 金鑰或自架的本機模型伺服器
-> （pi 0.99.2 的內建本機路徑是 llama.cpp router，由 `LLAMA_BASE_URL` 指向；它不吃 LM Studio 的
-> OpenAI 相容 API），本分支的驗收沒有涵蓋那一項。
+> 真實模型回合：**已於 2026-10-01 在板子上實機驗證**（板子自己跑 `llama-server`，不需要 PC、
+> 也不需要外部 API），做法與實測值見第 7 節。pi 0.99.2 的內建本機路徑仍是 llama.cpp router
+> （由 `LLAMA_BASE_URL` 指向，不吃 LM Studio 的 OpenAI 相容 API）。
 
 ## 3. 安裝與使用（適用方式）
 
@@ -115,6 +115,30 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
 ```
 
 ---
+
+## 7. 板子自足的真實模型回合（已實機驗證，2026-10-01）
+
+pi 0.99.2 在 Pi 2B 上以**板子自己執行的模型與伺服器**完成了真實回合，不需要 PC、也不需要外部 API：
+
+- **交叉編譯 `llama-server`**（板子沒有 cmake、PC 沒有交叉工具鏈時）：把 Ubuntu 的 armhf-cross
+  `.deb` 用 `apt-get download` ＋ `dpkg -x` 解到 `$HOME`（免 sudo）；`as` 需要
+  `LD_LIBRARY_PATH=<prefix>/usr/lib/x86_64-linux-gnu`（`libbfd-2.38-armhf.so` 解在那裡），連結要加
+  `--sysroot=<prefix>` 與 `-static-libstdc++ -static-libgcc`。實測產物 13.5 MB，板上
+  `llama-server --version` = `0.3.0-dev (build 10734, commit 121201a7b)`。
+- **用 router 模式啟動**：`llama-server --models-preset <ini> --host 127.0.0.1 --port 8080`。
+  必須走 `--models-preset`（模型 `source=preset`）；`--models-dir` 會回 `source=models_dir`，
+  pi 的 `modelIsSelectable()` 直接把它濾掉（症狀：`/models` 看得到模型，pi 卻說 Unknown provider）。
+- **`~/.pi/agent/models.json` 宣告 provider `llama.cpp` 與模型，且 `contextWindow` 必須大於
+  「提示 + 輸出上限 + 4096」**：`clampMaxTokensToContext()`（`packages/ai/src/api/simple-options.ts`）
+  會算 `contextWindow − 提示估算 − 4096` 並夾到下限 1；宣告太小會讓 pi 送出
+  `max_completion_tokens: 1`，模型只生一個 token 就 `finish_reason=length`。本輪實測值：宣告
+  8192、輸出上限 512、router `ctx-size` 同步 8192（KV 用 q8_0 才塞得下）。
+- **另外兩個實測坑**：`~/.pi/agent/auth.json` 內的憑證 URL **優先於** `LLAMA_BASE_URL` 環境變數；
+  pi 在 stdin 不是 TTY 時會吃掉 stdin，遠端執行一定要寫 `pi ... < /dev/null`。
+- **實測值**（Pi 2B、`-t 4`、8K ctx、q8_0 KV）：270M Q4 提示 10.95 tok/s、生成 2.76 tok/s、單回合
+  46 s；0.5B Q4 首回合 77 s（`stopReason: stop`、`input 55 / output 19 / total 74`）、暖機後 16 s。
+  llama-server 子程序 RSS 530 MiB，板子可用 636 MiB。
+- 注意：**鏈路**已驗證，不代表小模型答得對（0.5B 的事實正確率很差，這點不誇大）。
 
 ## English summary
 

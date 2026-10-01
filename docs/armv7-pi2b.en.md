@@ -53,10 +53,10 @@ getNativePlatformHelper() -> undefined
 | Memory | `node` baseline RSS **39 MiB**; 734 MiB available during install, no OOM |
 | Disk | Node 187 MB + pi package 168 MB (5.8 GB free in `$HOME`) |
 
-> Known limitation: the **CLI itself is verified**, but a real model turn needs an API key or a local
-> model server of your own — pi 0.99.2's built-in local path is the llama.cpp router addressed through
-> `LLAMA_BASE_URL` (it does not talk to LM Studio's OpenAI-compatible API). This branch's acceptance
-> does not cover that step.
+> Real model turns: **verified on the board on 2026-10-01** (the Pi runs its own `llama-server`; no PC
+> and no external API). Recipe and measurements: section 8. pi 0.99.2's built-in local path is still
+> the llama.cpp router addressed through `LLAMA_BASE_URL` (it does not talk to LM Studio's
+> OpenAI-compatible API).
 
 ## 3. Install and use
 
@@ -149,6 +149,36 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   keeps the `arm` allowance.
 
 ---
+
+## 8. Board-local model turns (verified on real hardware, 2026-10-01)
+
+pi 0.99.2 completed real turns on a Raspberry Pi 2 Model B with **the model and server running on the
+board itself** - no PC and no external API:
+
+- **Cross-building `llama-server`** when the board has no cmake and the host has no cross toolchain:
+  fetch Ubuntu's armhf-cross `.deb` files with `apt-get download` and unpack them into `$HOME` with
+  `dpkg -x` (no sudo). The assembler needs
+  `LD_LIBRARY_PATH=<prefix>/usr/lib/x86_64-linux-gnu` (that is where `libbfd-2.38-armhf.so` lands), and
+  linking needs `--sysroot=<prefix>` plus `-static-libstdc++ -static-libgcc`. Measured artifact:
+  13.5 MB; on the board `llama-server --version` reports `0.3.0-dev (build 10734, commit 121201a7b)`.
+- **Run it in router mode**: `llama-server --models-preset <ini> --host 127.0.0.1 --port 8080`.
+  The preset file is required (models then report `source=preset`); with `--models-dir` they report
+  `source=models_dir` and pi's `modelIsSelectable()` filters them out (symptom: `/models` lists them but
+  pi answers "Unknown provider").
+- **Declare the provider and models in `~/.pi/agent/models.json`, and make `contextWindow` larger than
+  prompt + max output + 4096**: `clampMaxTokensToContext()` (`packages/ai/src/api/simple-options.ts`)
+  computes `contextWindow - estimated prompt - 4096` and floors at 1, so a small declared window makes
+  pi send `max_completion_tokens: 1` and the model stops after one token with `finish_reason=length`.
+  Values measured here: 8192 declared, 512 max output, router `ctx-size` kept at 8192 (q8_0 KV is what
+  makes 8K fit in 921 MiB).
+- **Two more measured pitfalls**: the server URL stored in `~/.pi/agent/auth.json` **wins over** the
+  `LLAMA_BASE_URL` environment variable; and pi consumes stdin when it is not a TTY, so remote runs need
+  `pi ... < /dev/null`.
+- **Measurements** (Pi 2B, `-t 4`, 8K ctx, q8_0 KV): 270M Q4 - prompt 10.95 tok/s, generation 2.76
+  tok/s, 46 s per turn; 0.5B Q4 - 77 s first turn (`stopReason: stop`, `input 55 / output 19 / total
+  74`), 16 s warm. llama-server child RSS 530 MiB with 636 MiB free on the board.
+- Note: the **pipeline** is verified; this says nothing about a small model's factual accuracy (the
+  0.5B answers were wrong, and that is not being glossed over).
 
 ## 中文摘要（Chinese summary）
 

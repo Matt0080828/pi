@@ -51,9 +51,9 @@ getNativePlatformHelper() -> undefined
 | 메모리 | `node` 기준 RSS **39 MiB** (설치 중 여유 734 MiB, OOM 없음) |
 | 디스크 | Node 187 MB + pi 패키지 168 MB (`$HOME` 여유 5.8 GB) |
 
-> 알려진 한계: **CLI 자체는 검증되었지만** 실제 모델 1턴은 API 키나 자체 로컬 모델 서버가 필요합니다
-> (pi 0.99.2의 내장 로컬 경로는 `LLAMA_BASE_URL`로 지정하는 llama.cpp router이며, LM Studio의
-> OpenAI 호환 API는 사용하지 않습니다). 이 브랜치의 승인 검사는 그 단계를 포함하지 않습니다.
+> 실제 모델 1턴: **2026-10-01에 보드에서 실기 검증했습니다**(보드가 직접 `llama-server`를 실행,
+> PC나 외부 API 불필요). 절차와 실측값은 8절. pi 0.99.2의 내장 로컬 경로는 `LLAMA_BASE_URL`로
+> 지정하는 llama.cpp router 그대로입니다(LM Studio의 OpenAI 호환 API는 사용하지 않습니다).
 
 ## 3. 설치와 사용
 
@@ -141,3 +141,26 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
 - **업스트림 동기화는 ARMv7 작업에 영향을 주지 않습니다**: 업스트림 `005af57d88`(v0.99.2)을 병합한 뒤에도
   ARMv7 delta 20개 파일 모두가 바이트 단위로 동일합니다(이번 동기화에서 업스트림이 건드린 파일은 없고,
   `packages/tui/src/native-platform.ts`도 `arm` 허용을 유지).
+
+## 8. 보드 자체만으로 완결되는 실제 모델 1턴(실기 검증, 2026-10-01)
+
+pi 0.99.2는 Pi 2B에서 **모델과 서버를 보드가 직접 실행하는 상태로** 실제 1턴을 완료했습니다(PC도
+외부 API도 불필요):
+
+- **`llama-server` 크로스 빌드**: 보드에 cmake가 없고 호스트에 크로스 툴체인이 없을 때는 Ubuntu의
+  armhf-cross `.deb`를 `apt-get download` ＋ `dpkg -x`로 `$HOME`에 풀어 씁니다(sudo 불필요). `as`에는
+  `LD_LIBRARY_PATH=<prefix>/usr/lib/x86_64-linux-gnu`가 필요하고, 링크에는 `--sysroot=<prefix>`와
+  `-static-libstdc++ -static-libgcc`를 붙입니다. 실측 13.5 MB, 보드에서 `llama-server --version`은
+  `0.3.0-dev (build 10734)`.
+- **router 모드로 실행**: `llama-server --models-preset <ini>`. `--models-preset`가 필수입니다
+  (`source=preset`). `--models-dir`는 `source=models_dir`를 돌려주고 pi의 `modelIsSelectable()`이
+  걸러냅니다(증상: `/models`에는 보이는데 pi는 Unknown provider).
+- **`~/.pi/agent/models.json`의 `contextWindow`는 "프롬프트 + 최대 출력 + 4096"보다 커야 합니다**:
+  `clampMaxTokensToContext()`가 `contextWindow − 프롬프트 − 4096`을 계산해 하한 1로 자르기 때문에,
+  작게 선언하면 pi가 `max_completion_tokens: 1`을 보내고 1토큰 만에 `finish_reason=length`가 됩니다.
+  이번 실측값은 8192 선언／출력 상한 512／router `ctx-size`도 8192.
+- **나머지 두 함정**: `auth.json`의 서버 URL이 `LLAMA_BASE_URL`보다 **우선**합니다. pi는 stdin이
+  TTY가 아니면 stdin을 먹으므로 원격에서는 `< /dev/null`을 붙이세요.
+- **실측값**(`-t 4`, 8K ctx, q8_0 KV): 270M Q4는 프롬프트 10.95 tok/s, 생성 2.76 tok/s, 1턴 46초.
+  0.5B Q4는 첫 턴 77초(`stopReason: stop`), 워밍 후 16초. llama-server RSS 530 MiB, 보드 여유 636 MiB.
+- 주의: 검증된 것은 **경로**이며 소형 모델의 사실 정확도가 아닙니다(0.5B 응답은 틀렸습니다).
