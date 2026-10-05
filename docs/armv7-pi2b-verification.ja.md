@@ -8,7 +8,7 @@
 生ログが優先します。
 
 - ボード：Raspberry Pi 2 Model B（armv7l、921 MiB RAM）、Raspbian GNU/Linux 13 (trixie)
-- サイクル：2026-10-01、`@earendil-works/pi-coding-agent@0.99.2` をインストール
+- サイクル：2026-10-05、`@earendil-works/pi-coding-agent@1.0.2` をインストール
 - コマンド：`scripts/pi2-armv7/pi2-pi-agent.sh all`（probe → install → verify）を PC から SSH 経由で実行
 - 結果：**受け入れ検査 11/11 合格**、`verify` は exit 0
 
@@ -16,12 +16,12 @@
 
 | ログのブロック | 内容 |
 | --- | --- |
-| `=== 0) 基本環境` | 環境：`uname -m = armv7l`、Raspbian 13 (trixie)、921 MiB 中 734 MiB 空き、`$HOME` に 5.8 GB の空き。続いて 3 つのゲートを通過：アーキテクチャは armv7l、一般ユーザー（uid 1000）で実行し `$HOME` にのみインストール、ダウンローダ（`curl`）がある。 |
+| `=== 0) 基本環境` | 環境：`uname -m = armv7l`、Raspbian 13 (trixie)、921 MiB 中 718 MiB 空き、`$HOME` に 5.6 GB の空き。続いて 3 つのゲートを通過：アーキテクチャは armv7l、一般ユーザー（uid 1000）で実行し `$HOME` にのみインストール、ダウンローダ（`curl`）がある。 |
 | `=== 1) Node 22 armv7l` | Node v22.23.2 が既にあり（`/home/<user>/opt/node22/bin/node`、公式 armv7l ビルド系列）、`node:sqlite` も利用可能 → セッション backend にネイティブモジュール不要。 |
-| `=== 2) 安裝 pi coding agent` | npm 10.9.8 で公式パッケージを `/home/<user>/.local` に導入：`added 122 packages in 2m`。`node-domexception@1.0.0` の非推奨警告が 1 件出ますが上流依存で無害です。 |
-| `=== 3) 驗收（可量測的項目）` | 実行ファイルが存在し **`pi --version` が 0.99.2 を出力**、`pi --help` も正常。同梱の 6 つのプリビルドが列挙され、すべて x64/arm64（darwin/linux/win32）—— **`linux-arm` は無い**ため、このボードではネイティブは一切読み込まれません。本当の証拠は上の `pi --version` が成功している点です。 |
-| `=== 4) 量測（給日後比對用）` | 後日比較用の計測：`pi --version` 4.89 秒、`node` 基準 RSS 39 MiB、Node 187 MB、pi パッケージ 168 MB。 |
-| `=== 5) 接下來（可選）` | PATH を `~/.bashrc` に書いて永続化する方法と、実際のモデル 1 ターンの実行方法（キー、または自前のローカルモデルサーバーが必要——0.99.2 の内蔵ローカル経路は `LLAMA_BASE_URL` で指す llama.cpp router で、LM Studio の OpenAI 互換 API ではありません）。 |
+| `=== 2) 安裝 pi coding agent` | npm 10.9.8 で公式パッケージを `/home/<user>/.local` に導入：`added 4 packages, removed 5 packages, and changed 117 packages in 4m`。`node-domexception@1.0.0` の非推奨警告が 1 件出ますが上流依存で無害です。 |
+| `=== 3) 驗收（可量測的項目）` | 実行ファイルが存在し **`pi --version` が 1.0.2 を出力**、`pi --help` も正常。同梱の 6 つのプリビルドが列挙され、すべて x64/arm64（darwin/linux/win32）—— **`linux-arm` は無い**ため、このボードではネイティブは一切読み込まれません。本当の証拠は上の `pi --version` が成功している点です。 |
+| `=== 4) 量測（給日後比對用）` | 後日比較用の計測：`pi --version` 5.09 秒、`node` 基準 RSS 39 MiB、Node 187 MB、pi パッケージ 165 MB。 |
+| `=== 5) 接下來（可選）` | PATH を `~/.bashrc` に書いて永続化する方法と、実際のモデル 1 ターンの実行方法（キー、または自前のローカルモデルサーバーが必要——1.0.2 の内蔵ローカル経路は `LLAMA_BASE_URL` で指す llama.cpp router で、LM Studio の OpenAI 互換 API ではありません）。 |
 | `完成。記錄檔請用 --check-only 重跑輸出存證。` | インストール実行の最終行（「完了。記録を残すには `--check-only` で再実行して出力を保存してください」）。 |
 
 ## 受け入れ検査（`pi2-pi-agent.sh verify`）の対応表
@@ -42,17 +42,17 @@
 | ✗ | `意外發現原生 .node` | 想定外のネイティブ `.node` が出ていない |
 | ✗ | `中止（fail-closed）` | 中止した手順がない |
 
-## 独立した再計測（同じボード、0.99.2）
+## 独立した再計測（同じボード、1.0.2）
 
 インストール後に `pi --version` をさらに 3 回実行し、その時点の状態も取得：
 
 ```text
-  run1: 5.04 s (0.99.2)
-  run2: 4.99 s (0.99.2)
-  run3: 4.80 s (0.99.2)
+  run1: 4.99 s (1.0.2)
+  run2: 4.87 s (1.0.2)
+  run3: 4.80 s (1.0.2)
   node RSS: 39 MiB
-  free: 725 MiB available
-  disk HOME: 5.6G
+  free: 716 MiB available
+  disk HOME: 5.5G
 ```
 
 ## その他の板上の証拠（いずれも実測、記録は別ファイル）
