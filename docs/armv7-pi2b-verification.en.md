@@ -58,9 +58,10 @@ Three further `pi --version` runs after the install, plus the environment at tha
 
 ## Related board evidence (also measured, recorded elsewhere)
 
-- The installed loader refuses to hand out a native helper on this architecture — measured on the
-  board with the 0.99.2 package: `process.arch = arm`, and both `getNativeClipboard()` and
-  `getNativePlatformHelper()` return `undefined`, which is the documented command-line fallback.
+- The installed loader refuses to hand out a native helper on this architecture — re-measured on
+  the board with the 1.0.2 package: `process.arch = arm` and `getNativeClipboard()` returns
+  `undefined` (`getNativePlatformHelper()` is no longer re-exported by `@earendil-works/pi-tui`),
+  which is the documented command-line fallback.
 - The source-build gate behaves as documented: upstream's `packages/tui/native/linux/build.sh` exits
   **1** on armv7l (`Unsupported Linux architecture: armv7l`), while this fork's version prints a skip
   notice and exits **0**. A full from-source monorepo build on the board remains **unverified**.

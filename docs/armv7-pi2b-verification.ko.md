@@ -56,9 +56,9 @@
 
 ## 그 밖의 보드 증거(모두 실측, 기록은 별도 파일)
 
-- 설치된 로더는 이 아키텍처에서 네이티브 helper를 제공하지 않습니다 —— 0.99.2로 실측:
-  `process.arch = arm`에서 `getNativeClipboard()`와 `getNativePlatformHelper()` 모두 `undefined`
-  (문서에 적힌 명령줄 fallback).
+- 설치된 로더는 이 아키텍처에서 네이티브 helper를 제공하지 않습니다 —— 1.0.2로 재측정:
+  `process.arch = arm`에서 `getNativeClipboard()`는 `undefined`이고(1.0.2에서는
+  `getNativePlatformHelper()`가 더 이상 재export되지 않습니다), 이는 문서에 적힌 명령줄 fallback입니다.
 - 소스 빌드 게이트는 문서대로 동작합니다: 업스트림의 `packages/tui/native/linux/build.sh`는 armv7l에서
   **1**로 종료(`Unsupported Linux architecture: armv7l`), 이 fork의 버전은 건너뛴다는 메시지를 출력하고
   **0**으로 종료. 보드에서의 **소스 전체 빌드**는 여전히 미검증입니다.

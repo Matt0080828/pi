@@ -56,8 +56,9 @@
 
 ## 其他板上证据（同为实测，记录在别处）
 
-- 已安装的加载器在这块板子上拒绝提供原生 helper——用 0.99.2 包实测：`process.arch = arm`，
-  `getNativeClipboard()` 与 `getNativePlatformHelper()` 都返回 `undefined`，也就是文件里写的命令行 fallback。
+- 已安装的加载器在这块板子上拒绝提供原生 helper——用 1.0.2 包重测：`process.arch = arm`，
+  `getNativeClipboard()` 返回 `undefined`（1.0.2 的 `@earendil-works/pi-tui` 已不再对外导出
+  `getNativePlatformHelper()`），也就是文件里写的命令行 fallback。
 - 源码构建关卡行为与文件描述一致：upstream 的 `packages/tui/native/linux/build.sh` 在 armv7l 上退出
   **1**（`Unsupported Linux architecture: armv7l`），本 fork 版本打印跳过说明并退出 **0**。
   在板上**从源码整包构建**仍未验证。

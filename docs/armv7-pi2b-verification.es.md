@@ -58,9 +58,10 @@ Tres ejecuciones adicionales de `pi --version` tras la instalación, y el estado
 
 ## Otra evidencia medida en la placa (registrada en otros archivos)
 
-- El cargador instalado no entrega ningún helper nativo en esta arquitectura — medido con el paquete
-  0.99.2: con `process.arch = arm`, tanto `getNativeClipboard()` como `getNativePlatformHelper()`
-  devuelven `undefined`, que es el fallback documentado a herramientas de línea de comandos.
+- El cargador instalado no entrega ningún helper nativo en esta arquitectura — remedido con el
+  paquete 1.0.2: con `process.arch = arm`, `getNativeClipboard()` devuelve `undefined`
+  (`getNativePlatformHelper()` ya no se reexporta desde `@earendil-works/pi-tui`), que es el fallback
+  documentado a herramientas de línea de comandos.
 - La comprobación del build desde fuentes se comporta como está documentado: el
   `packages/tui/native/linux/build.sh` de upstream sale con **1** en armv7l
   (`Unsupported Linux architecture: armv7l`), mientras que el de este fork imprime un aviso de omisión y

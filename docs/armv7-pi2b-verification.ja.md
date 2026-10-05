@@ -57,9 +57,9 @@
 
 ## その他の板上の証拠（いずれも実測、記録は別ファイル）
 
-- 導入済みのローダーはこのアーキテクチャではネイティブ helper を渡しません——0.99.2 で実測：
-  `process.arch = arm` で `getNativeClipboard()` と `getNativePlatformHelper()` はどちらも
-  `undefined`（ドキュメント記載のコマンドライン fallback）。
+- 導入済みのローダーはこのアーキテクチャではネイティブ helper を渡しません——1.0.2 で再計測：
+  `process.arch = arm` で `getNativeClipboard()` は `undefined`（1.0.2 では `getNativePlatformHelper()` は
+  再エクスポートされません）。これはドキュメント記載のコマンドライン fallback です。
 - ソースビルドのゲートは記載どおりに動作：上流の `packages/tui/native/linux/build.sh` は armv7l で
   **1** で終了（`Unsupported Linux architecture: armv7l`）、この fork の版はスキップメッセージを
   出して **0** で終了。ボード上での**ソースからの全ビルド**は依然として未検証です。
