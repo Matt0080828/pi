@@ -8,7 +8,7 @@ literalmente: el propio script de instalación imprime en chino y reescribirlo d
 registro. Lo de abajo es explicación y traducción de referencia; si algo difiere, manda el registro original.
 
 - Placa: Raspberry Pi 2 Model B (armv7l, 921 MiB de RAM), Raspbian GNU/Linux 13 (trixie)
-- Ciclo: 2026-10-05, instalando `@earendil-works/pi-coding-agent@1.0.2`
+- Ciclo: 2026-10-06, instalando `@earendil-works/pi-coding-agent@1.0.4`
 - Comando: `scripts/pi2-armv7/pi2-pi-agent.sh all` (probe → install → verify), ejecutado desde el PC por SSH
 - Resultado: **11/11 comprobaciones de aceptación superadas**, `verify` exit 0
 
@@ -19,9 +19,9 @@ registro. Lo de abajo es explicación y traducción de referencia; si algo difie
 | `=== 0) 基本環境` | Entorno: `uname -m = armv7l`, Raspbian 13 (trixie), 921 MiB totales / 718 MiB libres, 5,6 GB libres en `$HOME`. Después pasan las tres primeras comprobaciones: la arquitectura es armv7l; se ejecuta como usuario sin privilegios (uid 1000) y todo va a `$HOME`; existe un descargador (`curl`). |
 | `=== 1) Node 22 armv7l` | Ya está Node v22.23.2 (`/home/<user>/opt/node22/bin/node`, la línea de compilación oficial para armv7l) y `node:sqlite` está disponible → el backend de sesión no necesita módulos nativos. |
 | `=== 2) 安裝 pi coding agent` | npm 10.9.8 instala el paquete oficial en `/home/<user>/.local`: `added 4 packages, removed 5 packages, and changed 117 packages in 4m`. Aparece un aviso de obsolescencia (`node-domexception@1.0.0`) que es de upstream y es inocuo. |
-| `=== 3) 驗收（可量測的項目）` | El ejecutable existe y **`pi --version` imprime 1.0.2**; `pi --help` también funciona. Se listan los seis precompilados incluidos y todos son x64/arm64 (darwin/linux/win32) — **ningún `linux-arm`**, así que en esta placa nunca se carga nada nativo; lo que realmente prueba el punto es que `pi --version` haya funcionado. |
+| `=== 3) 驗收（可量測的項目）` | El ejecutable existe y **`pi --version` imprime 1.0.4**; `pi --help` también funciona. Se listan los seis precompilados incluidos y todos son x64/arm64 (darwin/linux/win32) — **ningún `linux-arm`**, así que en esta placa nunca se carga nada nativo; lo que realmente prueba el punto es que `pi --version` haya funcionado. |
 | `=== 4) 量測（給日後比對用）` | Mediciones para comparar más adelante: `pi --version` 5,09 s, RSS base de `node` 39 MiB, Node 187 MB, paquete pi 165 MB. |
-| `=== 5) 接下來（可選）` | Cómo persistir el PATH en `~/.bashrc` y cómo ejecutar un turno real de modelo (necesita una clave, o un servidor de modelos local propio — la ruta local integrada de 1.0.2 es el router de llama.cpp vía `LLAMA_BASE_URL`, no la API compatible con OpenAI de LM Studio). |
+| `=== 5) 接下來（可選）` | Cómo persistir el PATH en `~/.bashrc` y cómo ejecutar un turno real de modelo (necesita una clave, o un servidor de modelos local propio — la ruta local integrada de 1.0.4 es el router de llama.cpp vía `LLAMA_BASE_URL`, no la API compatible con OpenAI de LM Studio). |
 | `完成。記錄檔請用 --check-only 重跑輸出存證。` | Última línea de la instalación («Hecho. Para dejar constancia, vuelve a ejecutar con `--check-only` y guarda la salida»). |
 
 ## Comprobaciones de aceptación (`pi2-pi-agent.sh verify`)
@@ -43,23 +43,23 @@ El verificador busca patrones en el registro y falla en cerrado ante cualquier d
 | ✗ | `意外發現原生 .node` | No apareció ningún `.node` nativo inesperado |
 | ✗ | `中止（fail-closed）` | No se abortó ningún paso |
 
-## Remedición independiente (misma placa, 1.0.2)
+## Remedición independiente (misma placa, 1.0.4)
 
 Tres ejecuciones adicionales de `pi --version` tras la instalación, y el estado de la placa en ese momento:
 
 ```text
-  run1: 4.99 s (1.0.2)
-  run2: 4.87 s (1.0.2)
-  run3: 4.80 s (1.0.2)
+  run1: 4.98 s (1.0.4)
+  run2: 4.93 s (1.0.4)
+  run3: 4.90 s (1.0.4)
   node RSS: 39 MiB
-  free: 716 MiB available
-  disk HOME: 5.5G
+  free: 611 MiB available
+  disk HOME: 5.0G
 ```
 
 ## Otra evidencia medida en la placa (registrada en otros archivos)
 
 - El cargador instalado no entrega ningún helper nativo en esta arquitectura — remedido con el
-  paquete 1.0.2: con `process.arch = arm`, `getNativeClipboard()` devuelve `undefined`
+  paquete 1.0.4: con `process.arch = arm`, `getNativeClipboard()` devuelve `undefined`
   (`getNativePlatformHelper()` ya no se reexporta desde `@earendil-works/pi-tui`), que es el fallback
   documentado a herramientas de línea de comandos.
 - La comprobación del build desde fuentes se comporta como está documentado: el
@@ -133,3 +133,10 @@ Two findings that made the difference and are worth keeping next to these number
   `contextWindow: 2048` in `~/.pi/agent/models.json` therefore sent `max_completion_tokens: 1` and every
   turn ended after a single token with `finish_reason=length`. Declaring 8192 (router `ctx-size` kept in
   step, q8_0 KV) produced the turns above.
+
+## Turnos locales con 1.0.4 (2026-10-06)
+
+Se repitió la medición local en la placa con `pi` 1.0.4 instalado, sobre el mismo router local de la
+placa. Ambos turnos devolvieron `rc=0` (frío 771 s, caliente 721 s — sin timeouts) y terminaron en un
+mensaje final con `stopReason: stop` tras una ronda de uso de herramientas, a ~0.99–1.65 tok/s. La salida
+en bruto está registrada literalmente en [armv7-pi2b-verification.md](armv7-pi2b-verification.md).

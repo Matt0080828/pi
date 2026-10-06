@@ -7,7 +7,7 @@
 对照翻译；两者若有出入，以原始日志为准。
 
 - 目标板：Raspberry Pi 2 Model B（armv7l，921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
-- 轮次：2026-10-05，安装 `@earendil-works/pi-coding-agent@1.0.2`
+- 轮次：2026-10-06，安装 `@earendil-works/pi-coding-agent@1.0.4`
 - 命令：`scripts/pi2-armv7/pi2-pi-agent.sh all`（probe → install → verify），由 PC 通过 SSH 驱动
 - 结果：**验收 11/11 通过**，`verify` exit 0
 
@@ -18,9 +18,9 @@
 | `=== 0) 基本環境` | 环境：`uname -m = armv7l`、Raspbian 13 (trixie)、921 MiB 总量 / 718 MiB 可用、`$HOME` 剩 5.6 GB。接着三道关卡通过：架构是 armv7l；以一般用户（uid 1000）执行且只装到 `$HOME`；有下载工具（`curl`）。 |
 | `=== 1) Node 22 armv7l` | 已有 Node v22.23.2（`/home/<user>/opt/node22/bin/node`，官方 armv7l 构建线），且 `node:sqlite` 可用 → session backend 不需要原生模块。 |
 | `=== 2) 安裝 pi coding agent` | 用 npm 10.9.8 把官方包装进 `/home/<user>/.local`：`added 4 packages, removed 5 packages, and changed 117 packages in 4m`。出现一条 `node-domexception@1.0.0` 弃用警告，属上游依赖、无害。 |
-| `=== 3) 驗收（可量測的項目）` | 执行文件存在且 **`pi --version` 输出 1.0.2**；`pi --help` 正常。列出包内 6 个 prebuild，全为 x64/arm64（darwin/linux/win32）—— **没有 `linux-arm`**，所以在这块板子上永远不会加载任何原生件；真正有说服力的是上面那句 `pi --version` 成功输出。 |
+| `=== 3) 驗收（可量測的項目）` | 执行文件存在且 **`pi --version` 输出 1.0.4**；`pi --help` 正常。列出包内 6 个 prebuild，全为 x64/arm64（darwin/linux/win32）—— **没有 `linux-arm`**，所以在这块板子上永远不会加载任何原生件；真正有说服力的是上面那句 `pi --version` 成功输出。 |
 | `=== 4) 量測（給日後比對用）` | 供日后比对的量测：`pi --version` 5.09 s、`node` 基准 RSS 39 MiB、Node 187 MB、pi 包 165 MB。 |
-| `=== 5) 接下來（可選）` | 如何把 PATH 写进 `~/.bashrc` 持久化，以及如何跑一次真实模型回合（需要密钥，或自架的本机模型伺服器——1.0.2 的内建本机路径是 `LLAMA_BASE_URL` 指向的 llama.cpp router，不是 LM Studio 的 OpenAI 兼容 API）。 |
+| `=== 5) 接下來（可選）` | 如何把 PATH 写进 `~/.bashrc` 持久化，以及如何跑一次真实模型回合（需要密钥，或自架的本机模型伺服器——1.0.4 的内建本机路径是 `LLAMA_BASE_URL` 指向的 llama.cpp router，不是 LM Studio 的 OpenAI 兼容 API）。 |
 | `完成。記錄檔請用 --check-only 重跑輸出存證。` | 安装运行的收尾行（「完成。要留证请用 `--check-only` 重跑并保存输出」）。 |
 
 ## 验收项（`pi2-pi-agent.sh verify`）对照
@@ -41,23 +41,23 @@
 | ✗ | `意外發現原生 .node` | 没有意外出现原生 `.node` |
 | ✗ | `中止（fail-closed）` | 没有任何步骤中止 |
 
-## 独立重测（同一块板，1.0.2）
+## 独立重测（同一块板，1.0.4）
 
 安装后又跑了三次 `pi --version`，以及当时的板子状态：
 
 ```text
-  run1: 4.99 s (1.0.2)
-  run2: 4.87 s (1.0.2)
-  run3: 4.80 s (1.0.2)
+  run1: 4.98 s (1.0.4)
+  run2: 4.93 s (1.0.4)
+  run3: 4.90 s (1.0.4)
   node RSS: 39 MiB
-  free: 716 MiB available
-  disk HOME: 5.5G
+  free: 611 MiB available
+  disk HOME: 5.0G
 ```
 
 ## 其他板上证据（同为实测，记录在别处）
 
-- 已安装的加载器在这块板子上拒绝提供原生 helper——用 1.0.2 包重测：`process.arch = arm`，
-  `getNativeClipboard()` 返回 `undefined`（1.0.2 的 `@earendil-works/pi-tui` 已不再对外导出
+- 已安装的加载器在这块板子上拒绝提供原生 helper——用 1.0.4 包重测：`process.arch = arm`，
+  `getNativeClipboard()` 返回 `undefined`（1.0.4 的 `@earendil-works/pi-tui` 已不再对外导出
   `getNativePlatformHelper()`），也就是文件里写的命令行 fallback。
 - 源码构建关卡行为与文件描述一致：upstream 的 `packages/tui/native/linux/build.sh` 在 armv7l 上退出
   **1**（`Unsupported Linux architecture: armv7l`），本 fork 版本打印跳过说明并退出 **0**。
@@ -129,3 +129,9 @@ Two findings that made the difference and are worth keeping next to these number
   `contextWindow: 2048` in `~/.pi/agent/models.json` therefore sent `max_completion_tokens: 1` and every
   turn ended after a single token with `finish_reason=length`. Declaring 8192 (router `ctx-size` kept in
   step, q8_0 KV) produced the turns above.
+
+## 用 1.0.4 跑的板子自足回合（2026-10-06）
+
+装上 `pi` 1.0.4 后，在同一块板子自足的 router 上又跑了一次。两个回合都是 `rc=0`（冷回合 771 s、
+暖回合 721 s，都没有撞上限），各自在一轮工具使用后以 `stopReason: stop` 的最终消息收尾，
+速率约 0.99–1.65 tok/s。原始输出逐字记录在 [armv7-pi2b-verification.md](armv7-pi2b-verification.md)。

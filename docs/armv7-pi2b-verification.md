@@ -10,13 +10,13 @@
 > [Español](armv7-pi2b-verification.es.md)
 
 Raw output of `scripts/pi2-armv7/pi2-pi-agent.sh all` (probe → install → verify) driven from the PC
-against the Pi 2B on 2026-10-05, installing `@earendil-works/pi-coding-agent@1.0.2`:
+against the Pi 2B on 2026-10-06, installing `@earendil-works/pi-coding-agent@1.0.4`:
 
 ```text
 === 0) 基本環境
     uname -m = armv7l  |  Raspbian GNU/Linux 13 (trixie)
-    mem: 921 MiB total, 718 MiB available
-    disk $HOME: 5.6G free
+    mem: 921 MiB total, 716 MiB available
+    disk $HOME: 5.0G free
   ✓ 架構是 armv7l（Pi2B）
   ✓ 以一般使用者執行（uid 1000），全程安裝到 $HOME，不需要 sudo
   ✓ 下載工具：curl
@@ -30,15 +30,15 @@ against the Pi 2B on 2026-10-05, installing `@earendil-works/pi-coding-agent@1.0
     npm 10.9.8  |  目標 prefix: /home/<user>/.local
 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
 
-added 4 packages, removed 5 packages, and changed 117 packages in 4m
+changed 121 packages in 4m
 
 9 packages are looking for funding
   run `npm fund` for details
-  ✓ 已安裝 @earendil-works/pi-coding-agent@1.0.2 到 /home/<user>/.local
+  ✓ 已安裝 @earendil-works/pi-coding-agent@1.0.4 到 /home/<user>/.local
 
 === 3) 驗收（可量測的項目）
   ✓ pi 執行檔存在：/home/<user>/.local/bin/pi
-    pi --version → 1.0.2
+    pi --version → 1.0.4
     pi --help   → pi - AI coding assistant with read, bash, edit, write tools  Usage: 
   套件內附的 prebuild（其他平台，armv7 不會載入）：
     @earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-tui/native/darwin/prebuilds/darwin-arm64/darwin-platform.node
@@ -51,7 +51,7 @@ added 4 packages, removed 5 packages, and changed 117 packages in 4m
   ✓ （真正的證明：pi --version 已在上面正常輸出 ✓）
 
 === 4) 量測（給日後比對用）
-    pi --version 耗時 5.09 s
+    pi --version 耗時 4.98 s
     node RSS 基準: 39 MiB
     磁碟：Node 187M｜pi 套件 165M（注意：/home/<user>/.local 可能與其他工具共用，勿整包刪）
 
@@ -84,19 +84,19 @@ against the log above:
 ✅ 全部驗收項目通過（實機量測，非推論）
 ```
 
-Independent re-measurement after the install (three further `pi --version` runs, same board, 1.0.2):
+Independent re-measurement after the install (three further `pi --version` runs, same board, 1.0.4):
 
 ```text
-  run1: 4.99 s (1.0.2)
-  run2: 4.87 s (1.0.2)
-  run3: 4.80 s (1.0.2)
+  run1: 4.98 s (1.0.4)
+  run2: 4.93 s (1.0.4)
+  run3: 4.90 s (1.0.4)
   node RSS: 39 MiB
-  free: 716 MiB available
-  disk HOME: 5.5G
+  free: 611 MiB available
+  disk HOME: 5.0G
 ```
 
-For reference, the previous cycle (2026-10-01, `all`, 0.99.2) measured
-startup 4.89 s and 5.6 GB free; the 1.0.2 numbers above are a fresh install, not a re-read of that log.
+For reference, the previous cycle (2026-10-05, `all`, 1.0.2) measured
+startup 5.09 s and 5.5 GB free; the 1.0.4 numbers above are a fresh install, not a re-read of that log.
 
 ## Board-local model turn (2026-10-01)
 
@@ -162,3 +162,40 @@ Two findings that made the difference and are worth keeping next to these number
   `contextWindow: 2048` in `~/.pi/agent/models.json` therefore sent `max_completion_tokens: 1` and every
   turn ended after a single token with `finish_reason=length`. Declaring 8192 (router `ctx-size` kept in
   step, q8_0 KV) produced the turns above.
+
+## 板子自足的真實模型回合（2026-10-06，`pi` 1.0.4）
+
+同一塊板子、同一個板子自足的 router（`llama-server --models-preset ~/llama/models.ini`，`127.0.0.1:8080`），
+這次裝的是 `@earendil-works/pi-coding-agent@1.0.4`。先卸載模型，所以第一個回合是真正的冷啟
+（`~/.pi/agent/models.json` 宣告 `contextWindow: 8192`，同上一節）。
+
+```text
+=== pi version: 1.0.4 ===
+=== stray pi procs before (must be 0): 0 ===
+=== router status before ===
+[('qwen2.5-0.5b-instruct-q4_k_m', 'unloaded')]
+=== unload (cold start) ===
+{"error":{"code":400,"message":"model is not running","type":"invalid_request_error"}}
+  mem before cold: 198 used / 649 avail
+=== COLD turn #1 ===
+cold rc=0 wall=771s stderr=0B out=55190B
+=== WARM turn #2 ===
+warm rc=0 wall=721s stderr=0B out=113876B
+=== model status after ===
+[('qwen2.5-0.5b-instruct-q4_k_m', 'loaded')]
+=== resources ===
+Mem: 921 total, 306 used, 59 free, 614 available (MiB)
+llama-server RSS kB: 616112
+=== router slot timing (tokens/s) ===
+prompt eval time =  413433.22 ms /  681 tokens (607.10 ms per token,   1.65 tokens per second)
+       eval time =  242881.06 ms /  241 tokens (1012.00 ms per token,  0.99 tokens per second)
+      total time =  656314.28 ms /  922 tokens
+(另一筆 slot：eval time = 49491.44 ms / 52 tokens = 1.03 tokens per second)
+```
+
+兩個回合都是 `rc=0`（沒有被 `timeout` 砍），而且各自在**一輪工具使用之後**以 `stopReason: stop`
+的最終訊息收尾：冷回合回答「对不起，我找不到包含齿輪種類的文件。可能有误。」，暖回合讀了
+`…/@earendil-works/pi-coding-agent/README.md` 再以英文總結。也就是說 1.0.4 在板子上端到端仍然可用：
+提示 → 工具 → 最終文字，速率約 0.99–1.65 tok/s。
+
+量測檔：板上 `~/measure104.out`，12,617 bytes，`sha256 b2f9803d37828e84…`（PC 上保留的副本同雜湊）。

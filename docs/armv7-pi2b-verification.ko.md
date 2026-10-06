@@ -7,7 +7,7 @@
 고쳐 쓰면 기록으로서의 가치가 사라집니다). 아래는 설명과 대조 번역이며, 둘이 다르면 원본 로그가 기준입니다.
 
 - 보드: Raspberry Pi 2 Model B(armv7l, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
-- 사이클: 2026-10-05, `@earendil-works/pi-coding-agent@1.0.2` 설치
+- 사이클: 2026-10-06, `@earendil-works/pi-coding-agent@1.0.4` 설치
 - 명령: `scripts/pi2-armv7/pi2-pi-agent.sh all`(probe → install → verify)을 PC에서 SSH로 구동
 - 결과: **승인 검사 11/11 통과**, `verify` exit 0
 
@@ -18,9 +18,9 @@
 | `=== 0) 基本環境` | 환경: `uname -m = armv7l`, Raspbian 13 (trixie), 921 MiB 중 718 MiB 여유, `$HOME` 5.6 GB 여유. 이어서 세 개의 게이트 통과: 아키텍처가 armv7l, 일반 사용자(uid 1000)로 실행하며 `$HOME`에만 설치, 다운로더(`curl`) 존재. |
 | `=== 1) Node 22 armv7l` | Node v22.23.2가 이미 있고(`/home/<user>/opt/node22/bin/node`, 공식 armv7l 빌드 계열), `node:sqlite`도 사용 가능 → 세션 백엔드에 네이티브 모듈 불필요. |
 | `=== 2) 安裝 pi coding agent` | npm 10.9.8로 공식 패키지를 `/home/<user>/.local`에 설치: `added 4 packages, removed 5 packages, and changed 117 packages in 4m`. `node-domexception@1.0.0` 폐기 예정 경고 1건은 업스트림 의존성이며 무해합니다. |
-| `=== 3) 驗收（可量測的項目）` | 실행 파일이 존재하고 **`pi --version`이 1.0.2을 출력**, `pi --help`도 정상. 동봉된 6개 사전 빌드가 나열되며 모두 x64/arm64(darwin/linux/win32) —— **`linux-arm` 없음**, 따라서 이 보드에서는 네이티브가 전혀 로드되지 않습니다. 진짜 증거는 위의 `pi --version` 성공입니다. |
+| `=== 3) 驗收（可量測的項目）` | 실행 파일이 존재하고 **`pi --version`이 1.0.4를 출력**, `pi --help`도 정상. 동봉된 6개 사전 빌드가 나열되며 모두 x64/arm64(darwin/linux/win32) —— **`linux-arm` 없음**, 따라서 이 보드에서는 네이티브가 전혀 로드되지 않습니다. 진짜 증거는 위의 `pi --version` 성공입니다. |
 | `=== 4) 量測（給日後比對用）` | 이후 비교용 계측: `pi --version` 5.09초, `node` 기준 RSS 39 MiB, Node 187 MB, pi 패키지 165 MB. |
-| `=== 5) 接下來（可選）` | PATH를 `~/.bashrc`에 넣어 영구 적용하는 방법과 실제 모델 1턴 실행 방법(키 또는 자체 로컬 모델 서버 필요 — 1.0.2의 내장 로컬 경로는 `LLAMA_BASE_URL`로 지정하는 llama.cpp router이며, LM Studio의 OpenAI 호환 API가 아닙니다). |
+| `=== 5) 接下來（可選）` | PATH를 `~/.bashrc`에 넣어 영구 적용하는 방법과 실제 모델 1턴 실행 방법(키 또는 자체 로컬 모델 서버 필요 — 1.0.4의 내장 로컬 경로는 `LLAMA_BASE_URL`로 지정하는 llama.cpp router이며, LM Studio의 OpenAI 호환 API가 아닙니다). |
 | `完成。記錄檔請用 --check-only 重跑輸出存證。` | 설치 실행의 마지막 줄("완료. 기록을 남기려면 `--check-only`로 다시 실행해 출력을 저장하세요"). |
 
 ## 승인 검사(`pi2-pi-agent.sh verify`) 대응표
@@ -41,23 +41,23 @@
 | ✗ | `意外發現原生 .node` | 예상치 못한 네이티브 `.node` 없음 |
 | ✗ | `中止（fail-closed）` | 중단된 단계 없음 |
 
-## 독립 재측정(같은 보드, 1.0.2)
+## 독립 재측정(같은 보드, 1.0.4)
 
 설치 후 `pi --version`을 3회 더 실행하고 그 시점의 상태도 기록:
 
 ```text
-  run1: 4.99 s (1.0.2)
-  run2: 4.87 s (1.0.2)
-  run3: 4.80 s (1.0.2)
+  run1: 4.98 s (1.0.4)
+  run2: 4.93 s (1.0.4)
+  run3: 4.90 s (1.0.4)
   node RSS: 39 MiB
-  free: 716 MiB available
-  disk HOME: 5.5G
+  free: 611 MiB available
+  disk HOME: 5.0G
 ```
 
 ## 그 밖의 보드 증거(모두 실측, 기록은 별도 파일)
 
-- 설치된 로더는 이 아키텍처에서 네이티브 helper를 제공하지 않습니다 —— 1.0.2로 재측정:
-  `process.arch = arm`에서 `getNativeClipboard()`는 `undefined`이고(1.0.2에서는
+- 설치된 로더는 이 아키텍처에서 네이티브 helper를 제공하지 않습니다 —— 1.0.4로 재측정:
+  `process.arch = arm`에서 `getNativeClipboard()`는 `undefined`이고(1.0.4에서는
   `getNativePlatformHelper()`가 더 이상 재export되지 않습니다), 이는 문서에 적힌 명령줄 fallback입니다.
 - 소스 빌드 게이트는 문서대로 동작합니다: 업스트림의 `packages/tui/native/linux/build.sh`는 armv7l에서
   **1**로 종료(`Unsupported Linux architecture: armv7l`), 이 fork의 버전은 건너뛴다는 메시지를 출력하고
@@ -129,3 +129,10 @@ Two findings that made the difference and are worth keeping next to these number
   `contextWindow: 2048` in `~/.pi/agent/models.json` therefore sent `max_completion_tokens: 1` and every
   turn ended after a single token with `finish_reason=length`. Declaring 8192 (router `ctx-size` kept in
   step, q8_0 KV) produced the turns above.
+
+## 1.0.4로 다시 측정한 보드 자체 턴(2026-10-06)
+
+`pi` 1.0.4를 설치한 상태에서 같은 보드 자체 router로 다시 측정했습니다. 두 턴 모두 `rc=0`
+(콜드 771 s, 웜 721 s, 타임아웃 없음)이며, 도구 사용 1회 뒤 `stopReason: stop`인 최종 메시지로
+끝났습니다. 속도는 약 0.99–1.65 tok/s. 원시 출력은
+[armv7-pi2b-verification.md](armv7-pi2b-verification.md)에 그대로 기록했습니다.

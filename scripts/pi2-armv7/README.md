@@ -9,7 +9,7 @@ is in [`docs/armv7-pi2b.md`](../../docs/armv7-pi2b.md) — also available in
 
 | Script | Runs on | What it does |
 | --- | --- | --- |
-| `install-pi-on-pi2.sh` | the Pi2 | gates (arch `armv7l`, not root, a downloader present) → installs Node v22 armv7l into `~/opt` → installs the npm package into `~/.local` → verifies → measures. `--dry-run` changes nothing; `--check-only` inspects only. Fails closed. Pins `@earendil-works/pi-coding-agent@1.0.2` by default; override with `PI_PKG=<spec>` (last verified on real hardware: 2026-10-05, 1.0.2). |
+| `install-pi-on-pi2.sh` | the Pi2 | gates (arch `armv7l`, not root, a downloader present) → installs Node v22 armv7l into `~/opt` → installs the npm package into `~/.local` → verifies → measures. `--dry-run` changes nothing; `--check-only` inspects only. Fails closed. Pins `@earendil-works/pi-coding-agent@1.0.4` by default; override with `PI_PKG=<spec>` (last verified on real hardware: 2026-10-06, 1.0.4). |
 | `pi2-pi-agent.sh` | the PC | `probe` (reachability + current state), `install` (fetches the Node tarball on the PC, scp's it over, runs the installer, keeps a log), `verify` (judges a log against the acceptance list), `all`. Set `HOST=user@host` for your board — it is **required**, there is no default address. Set `PI_PKG=@earendil-works/pi-coding-agent@<version>` to verify one specific published version: the driver forwards it to the installer instead of using the installer's pin. |
 | `selftest.sh` | the PC | tests the tools themselves, including the paths that must be refused: running the installer on a non-ARMv7 host, `--dry-run` changing nothing, the probe not claiming success when the board is unreachable, and the verifier rejecting a log that shows a non-v22 Node, a stray prebuild, or a root run. |
 
