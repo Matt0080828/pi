@@ -10,6 +10,7 @@ solo añade dos pequeños cambios "habilitadores" para que «compilar desde el c
 
 - Placa objetivo: Raspberry Pi 2 Model B (armv7l, 4×900 MHz, 921 MiB de RAM), Raspbian GNU/Linux 13 (trixie)
 - Medición: **2026-10-06 con `@earendil-works/pi-coding-agent@1.0.4`** (ciclo anterior: 2026-10-05, 1.0.2)
+- Revalidado (nivel de paquete): **2026-10-13 con `@earendil-works/pi-coding-agent@1.2.0`** (upstream v1.2.0, `7d75a0e3e`) — sin restricción `os`/`cpu`, CLI preempaquetada, dependencias solo JS/wasm (`canvas` ya ni siquiera es `devDependency`), `node:sqlite` integrado, `pi-tui@1.2.0` sigue con exactamente seis precompilados x64/arm64, y el release v1.2.0 no añade ningún activo armv7. El último ciclo medido en la placa sigue siendo 1.0.4 (sin reejecución en placa todavía)
 - Registro sin procesar: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md) (con
   [guía en español](armv7-pi2b-verification.es.md))
 - La evidencia son **mediciones reales de hardware**, no razonamientos estáticos: 11/11 comprobaciones
@@ -22,7 +23,7 @@ solo añade dos pequeños cambios "habilitadores" para que «compilar desde el c
 | --- | --- |
 | **Node 22 tiene compilaciones oficiales para armv7l; Node 23+ no** | `nodejs.org/dist/index.json`: las **35/35** versiones de v22 incluyen `linux-armv7l` (incluidas las 11 que son >= 22.19; la última es v22.23.2); ninguna de las 12 versiones más recientes (v23+) la incluye. Este repositorio exige `engines.node >= 22.19.0` → **solo la línea v22 lo cumple** |
 | **Los binarios precompilados oficiales no incluyen armv7** | Los recursos de la versión son solo `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64`, y `build-binaries.yml` contempla exactamente esos cuatro casos → el tarball oficial **no sirve** |
-| **La ruta del paquete npm no tiene obstáculo nativo** | `@earendil-works/pi-coding-agent@1.0.4`: **sin restricción `os`/`cpu`**, incluye una CLI ya empaquetada (`dist/bundle/*.js`), sus dependencias son JS puro o wasm (`photon-node` incluye `photon_rs_bg.wasm`), `canvas` solo está en `devDependencies` y el backend de sesión usa el `node:sqlite` integrado |
+| **La ruta del paquete npm no tiene obstáculo nativo** | `@earendil-works/pi-coding-agent@1.2.0` (revalidado 2026-10-13; el ciclo en placa 1.0.4 midió la misma estructura): **sin restricción `os`/`cpu`**, incluye una CLI ya empaquetada (`dist/bundle/*.js`), sus dependencias son JS puro o wasm (`photon-node` incluye `photon_rs_bg.wasm`), `canvas` ya ni siquiera es `devDependency` (hasta 1.0.4 solo estaba ahí) y el backend de sesión usa el `node:sqlite` integrado |
 
 La única pérdida funcional: el helper nativo X11/portapapeles de la TUI (`linux-platform-x11.node`)
 solo existe precompilado para x64/arm64, y el cargador `packages/tui/src/native-platform.ts` devuelve
@@ -72,7 +73,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 1.0.4
+pi --version                 # 1.2.0
 
 # 3) Persistencia (añadir a ~/.bashrc)
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -144,10 +145,15 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   precompilado específico de ARMv7** *y* la CLI arranca».
 - **Los metadatos del paquete 1.0.4 se revalidaron**: sigue sin restricción `os`/`cpu` y `pi-tui` sigue
   incluyendo exactamente seis precompilados (x64/arm64 para darwin/linux/win32), sin `linux-arm`.
-- **La sincronización con upstream no toca el trabajo de ARMv7**: tras fusionar upstream `28dcce2ba`
-  (v1.0.4), 19 de los 20 archivos del delta de ARMv7 son idénticos byte a byte; la única diferencia es
-  `.gitignore`, que upstream también editó en este ciclo (se conserva el contenido del fork y se
-  incorporan las dos líneas de upstream), y `packages/tui/src/native-platform.ts` conserva el permiso `arm`.
+- **Los metadatos del paquete 1.2.0 se revalidaron otra vez (2026-10-13)**: sigue sin restricción
+  `os`/`cpu`, `pi-tui@1.2.0` incluye los mismos seis precompilados (sin `linux-arm`), el bundle sigue
+  usando `node:sqlite`, `canvas` ya ni siquiera es `devDependency`, y el release v1.2.0 no añade ningún
+  binario armv7.
+- **La sincronización con upstream no toca el trabajo de ARMv7**: tras fusionar upstream `7d75a0e3e`
+  (v1.2.0, 2026-10-13), 18 de los 20 archivos del delta de ARMv7 son idénticos byte a byte; las propias
+  ediciones de upstream en este ciclo son `.gitignore` (`node_modules/` → `node_modules`, cubriendo
+  enlaces simbólicos) y una línea de `README.md` (descripción del paquete chord) — el contenido del fork se
+  conserva —, y `packages/tui/src/native-platform.ts` conserva el permiso `arm`.
 
 ## 8. Turnos de modelo locales a la placa (verificado en hardware real, 2026-10-01)
 

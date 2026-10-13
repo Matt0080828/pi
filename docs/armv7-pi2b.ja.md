@@ -9,6 +9,7 @@ helper を作る」場合がアーキテクチャで止まらないようにす�
 
 - 対象ボード：Raspberry Pi 2 Model B（armv7l、4×900 MHz、921 MiB RAM）、Raspbian GNU/Linux 13 (trixie)
 - 計測日：**2026-10-06（`@earendil-works/pi-coding-agent@1.0.4`）**｜前回サイクルは 2026-10-05 の 1.0.2
+- パッケージレベル再検証：**2026-10-13（`@earendil-works/pi-coding-agent@1.2.0`、上流 v1.2.0／`7d75a0e3e`）**：`os`/`cpu` 制限なし、ビルド済み CLI、依存は純 JS/wasm（`canvas` は `devDependencies` からも消えた）、内蔵 `node:sqlite`、`pi-tui@1.2.0` のプリビルドも依然 x64/arm64 の 6 つ、v1.2.0 リリースに armv7 アセットは無し。実機計測サイクルは 1.0.4 が最後（板上再実行は未実施）
 - 生ログ：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（[日本語ガイド](armv7-pi2b-verification.ja.md)付き）
 - 根拠は**実機計測**であり、机上の推論ではありません：受け入れ検査 11/11 合格
 
@@ -20,7 +21,7 @@ helper を作る」場合がアーキテクチャで止まらないようにす�
 | --- | --- |
 | **Node 22 には公式 armv7l ビルドがあり、Node 23 以降には無い** | `nodejs.org/dist/index.json`：v22 は **35/35** すべてのリリースが `linux-armv7l` を含む（22.19 以上の 11 版を含む、最新 v22.23.2）。直近 12 リリース（v23 以降）には無い。このリポジトリは `engines.node >= 22.19.0` を要求 → **v22 系でのみ満たせる** |
 | **公式のプリビルドバイナリに armv7 は無い** | リリース資産は `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64` のみで、`build-binaries.yml` のプラットフォーム判定も同じ 4 つだけ → 公式 tarball は**使えない** |
-| **npm パッケージ経路にネイティブの障害は無い** | `@earendil-works/pi-coding-agent@1.0.4`：**`os`/`cpu` 制限なし**、ビルド済み CLI 同梱（`dist/bundle/*.js`）、依存は純 JS か wasm（`photon-node` が `photon_rs_bg.wasm` を内包）、`canvas` は `devDependencies` のみ、セッション backend は Node 内蔵の `node:sqlite` |
+| **npm パッケージ経路にネイティブの障害は無い** | `@earendil-works/pi-coding-agent@1.2.0`（2026-10-13 再検証；板上の 1.0.4 サイクルで同じ構造を実測）：**`os`/`cpu` 制限なし**、ビルド済み CLI 同梱（`dist/bundle/*.js`）、依存は純 JS か wasm（`photon-node` が `photon_rs_bg.wasm` を内包）、`canvas` は `devDependencies` からも削除済み（1.0.4 まで `devDependencies` のみ）、セッション backend は Node 内蔵の `node:sqlite` |
 
 唯一の機能低下：TUI のネイティブ X11／クリップボード helper（`linux-platform-x11.node`）は
 x64/arm64 のプリビルドしか無く、ローダー `packages/tui/src/native-platform.ts` はそれ以外の
@@ -69,7 +70,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 1.0.4
+pi --version                 # 1.2.0
 
 # 3) 永続化（~/.bashrc に追記）
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -139,9 +140,13 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   「**armv7 専用プリビルドが無い** *かつ* CLI が起動する」です。
 - **1.0.4 のパッケージ メタデータも再確認済み**：`os`/`cpu` 制限なし、`pi-tui` のプリビルドは依然
   x64/arm64 の 6 つのみ（`linux-arm` なし）。
-- **上流への同期は ARMv7 の作業に影響しません**：上流 `28dcce2ba`（v1.0.4）をマージした後も、
-  ARMv7 delta の 20 ファイルのうち 19 個がバイト単位で同一です（唯一の差分は `.gitignore` で、
-  今回の同期で上流も変更していますが、fork の内容は保持しつつ上流の 2 行を併合しました）。
+- **1.2.0 のパッケージ メタデータも再確認済み（2026-10-13）**：`os`/`cpu` 制限なし、`pi-tui@1.2.0` の
+  プリビルドも同じ 6 つ（`linux-arm` なし）、バンドルは `node:sqlite`、`canvas` は `devDependencies`
+  からも消え、v1.2.0 リリースに armv7 アセットは無し。
+- **上流への同期は ARMv7 の作業に影響しません**：上流 `7d75a0e3e`（v1.2.0、2026-10-13）をマージした後も、
+  ARMv7 delta の 20 ファイルのうち 18 個がバイト単位で同一です（上流自身の編集は `.gitignore`
+  （`node_modules/` → `node_modules`、シンボリックリンクもカバー）と `README.md` の 1 行
+  （chord パッケージの説明）で、fork の追加は保持）。
   `packages/tui/src/native-platform.ts` も `arm` 許可を保持しています。
 
 ## 8. 板の上だけで完結する実モデル 1 ターン（実機検証済み、2026-10-01）

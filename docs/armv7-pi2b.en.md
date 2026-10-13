@@ -9,6 +9,7 @@ architecture (see [What this fork changes](#4-what-this-fork-changes)).
 
 - Target board: Raspberry Pi 2 Model B (armv7l, 4x900 MHz, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
 - Measured: **2026-10-06 with `@earendil-works/pi-coding-agent@1.0.4`** (previous cycle: 2026-10-05, 1.0.2)
+- Re-verified (package level): **2026-10-13 with `@earendil-works/pi-coding-agent@1.2.0`** (upstream v1.2.0, `7d75a0e3e`) — no `os`/`cpu` restriction, prebuilt CLI, pure JS/wasm dependencies (`canvas` no longer even a `devDependency`), built-in `node:sqlite`, `pi-tui@1.2.0` still ships exactly six x64/arm64 prebuilds, and the v1.2.0 release adds no armv7 asset. The last on-board measurement cycle remains 1.0.4 (no on-board re-run yet)
 - Raw board log: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md) — with an English guide to
   the same log: [`armv7-pi2b-verification.en.md`](armv7-pi2b-verification.en.md)
 - The evidence is **hardware measurement, not static reasoning**: 11/11 acceptance checks passed
@@ -22,7 +23,7 @@ architecture (see [What this fork changes](#4-what-this-fork-changes)).
 | --- | --- |
 | **Node 22 has official armv7l builds; Node 23+ does not** | `nodejs.org/dist/index.json`: every v22 release ships `linux-armv7l` (**35/35**, including all 11 releases >= 22.19, latest v22.23.2); none of the 12 most recent releases (v23+) do. This repo requires `engines.node >= 22.19.0` → **only the v22 line satisfies it** |
 | **The official prebuilt binaries contain no armv7** | Release assets are `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64` only, and `build-binaries.yml` lists exactly those four platform cases → the official tarball is **not usable** |
-| **The npm package route has no native obstacle** | `@earendil-works/pi-coding-agent@1.0.4`: **no `os`/`cpu` restriction**, ships a prebuilt CLI (`dist/bundle/*.js`), depends only on plain JS or wasm (`photon-node` carries `photon_rs_bg.wasm`), `canvas` is a `devDependency` only, and the session backend uses Node's built-in `node:sqlite` |
+| **The npm package route has no native obstacle** | `@earendil-works/pi-coding-agent@1.2.0` (re-verified 2026-10-13; the on-board 1.0.4 cycle measured the same structure): **no `os`/`cpu` restriction**, ships a prebuilt CLI (`dist/bundle/*.js`), depends only on plain JS or wasm (`photon-node` carries `photon_rs_bg.wasm`), `canvas` is no longer even a `devDependency`, and the session backend uses Node's built-in `node:sqlite` |
 
 The only functional loss: the TUI's native X11/clipboard helper (`linux-platform-x11.node`) ships
 prebuilds for x64/arm64 only, and the loader `packages/tui/src/native-platform.ts` returns `undefined`
@@ -72,7 +73,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 1.0.4
+pi --version                 # 1.2.0
 
 # 3) Persist it (append to ~/.bashrc)
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -144,10 +145,15 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
 - **Package metadata was re-checked before restating the claim for 1.0.4**: still no `os`/`cpu`
   restriction, and `pi-tui` still ships exactly six prebuilds (x64/arm64 for darwin/linux/win32) with no
   `linux-arm`.
-- **The upstream sync does not touch the ARMv7 work**: after merging upstream `28dcce2ba` (v1.0.4), 19 of the 20 ARMv7 delta files are byte-identical to the
-  pre-merge branch; the only difference is `.gitignore`, which upstream also edited in this cycle (the
-  fork's content is kept and upstream's two lines are merged in), and `packages/tui/src/native-platform.ts`
-  keeps the `arm` allowance.
+- **Package metadata was re-checked again for 1.2.0 (2026-10-13)**: still no `os`/`cpu` restriction,
+  `pi-tui@1.2.0` ships the same six prebuilds (no `linux-arm`), the bundle still uses `node:sqlite`,
+  `canvas` is no longer even a `devDependency`, and the v1.2.0 release assets add no armv7 binary.
+- **The upstream sync does not touch the ARMv7 work**: after merging upstream `7d75a0e3e` (v1.2.0,
+  2026-10-13), 18 of the 20 ARMv7 delta files are byte-identical to the pre-merge branch; upstream's own
+  edits this cycle are `.gitignore` (`node_modules/` → `node_modules`, covering symlinks) and one
+  `README.md` line (chord package description) — the fork's additions are kept, and
+  `packages/tui/src/native-platform.ts` keeps the `arm` allowance. (Previous cycle, v1.0.4: same
+  pattern — only `.gitignore` was co-edited.)
 
 ---
 

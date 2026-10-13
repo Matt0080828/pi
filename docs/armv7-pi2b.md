@@ -8,6 +8,7 @@
 
 - 目標板：Raspberry Pi 2 Model B（armv7l, 4×900 MHz, 921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
 - 實測日期：**2026-10-06（`@earendil-works/pi-coding-agent@1.0.4`）**｜前一輪 2026-10-05 為 1.0.2
+- 套件層級重驗：**2026-10-13（`@earendil-works/pi-coding-agent@1.2.0`，上游 v1.2.0／`7d75a0e3e`）**：無 `os`/`cpu` 限制、預打包 CLI、純 JS/wasm 依賴（`canvas` 連 `devDependencies` 都已不在）、內建 `node:sqlite`、`pi-tui@1.2.0` 仍只有 6 個 x64/arm64 prebuild、v1.2.0 release 無 armv7 資產。實機量測輪次仍停在 1.0.4（尚未上板重測）
 - 原始記錄：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（導讀：[英](armv7-pi2b-verification.en.md)／[簡中](armv7-pi2b-verification.zh-CN.md)／[日](armv7-pi2b-verification.ja.md)／[韓](armv7-pi2b-verification.ko.md)／[西](armv7-pi2b-verification.es.md)）
 - 其他語言版本見本頁最上方語言列
 - 證據是**實機量測**，不是靜態推論：驗收 11/11 通過
@@ -20,7 +21,7 @@
 | --- | --- |
 | **Node 22 有官方 armv7l 建置，Node 23+ 沒有** | `nodejs.org/dist/index.json`：v22 全 **35/35** 版含 `linux-armv7l`（含 ≥ 22.19 的 11 版，最新 v22.23.2）；最近 12 個版本（v23+）皆無。本 repo 要求 `engines.node >= 22.19.0` → **只能在 v22 線滿足** |
 | **官方預編譯二進位不含 armv7** | release 資產只有 `linux-x64`／`linux-arm64`／`darwin-x64|arm64`／`windows-x64|arm64`，`build-binaries.yml` 的平台判斷同樣只列這四個 → 官方 tarball **不可用** |
-| **npm 套件路線沒有原生障礙** | `@earendil-works/pi-coding-agent`：無 `os`/`cpu` 限制、已含預打包 CLI（`dist/bundle/*.js`）、依賴為純 JS 或 wasm（`photon-node` 內含 `photon_rs_bg.wasm`）、`canvas` 只在 `devDependencies`、session backend 用 Node 內建 `node:sqlite` |
+| **npm 套件路線沒有原生障礙** | `@earendil-works/pi-coding-agent`：無 `os`/`cpu` 限制、已含預打包 CLI（`dist/bundle/*.js`）、依賴為純 JS 或 wasm（`photon-node` 內含 `photon_rs_bg.wasm`）、`canvas` 只在 `devDependencies`（1.2.0 已完全移除）、session backend 用 Node 內建 `node:sqlite` |
 
 唯一的功能減損：TUI 的原生 X11／剪貼簿 helper（`linux-platform-x11.node`）只有 x64/arm64 prebuild，
 且載入器 `packages/tui/src/native-platform.ts` 會對其他架構直接回 `undefined`。
@@ -60,7 +61,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 1.0.4
+pi --version                 # 1.2.0
 
 # 3) 持久化（加進 ~/.bashrc）
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -153,5 +154,5 @@ loses clipboard/image integration but nothing crashes.
 This branch adds two optional enabling changes — `native/linux/build.sh` no longer fails the whole build on
 ARMv7 (it skips with a notice instead of `exit 1`), and the native loader also accepts `arm` so a locally
 built helper would be used — plus the tested install/verify scripts in `scripts/pi2-armv7/` and the raw
-hardware log in `docs/armv7-pi2b-verification.md`. Measured: `pi --version` 1.0.4, startup 4.98 s (4.90–4.98 s on re-runs),
-node RSS 39 MiB, no OOM, ~165 MB for the package.
+hardware log in `docs/armv7-pi2b-verification.md`. Measured on the board (1.0.4, 2026-10-06): `pi --version` 1.0.4, startup 4.98 s (4.90–4.98 s on re-runs),
+node RSS 39 MiB, no OOM, ~165 MB for the package. The package-level claims were re-verified for 1.2.0 on 2026-10-13 (no on-board re-run yet).

@@ -9,6 +9,7 @@
 
 - 대상 보드: Raspberry Pi 2 Model B(armv7l, 4×900 MHz, 921 MiB RAM), Raspbian GNU/Linux 13 (trixie)
 - 계측일: **2026-10-06(`@earendil-works/pi-coding-agent@1.0.4`)**｜이전 사이클은 2026-10-05의 1.0.2
+- 패키지 레벨 재검증: **2026-10-13(`@earendil-works/pi-coding-agent@1.2.0`, 업스트림 v1.2.0/`7d75a0e3e`)** — `os`/`cpu` 제한 없음, 사전 빌드 CLI, 순수 JS/wasm 의존성(`canvas`는 `devDependencies`에서도 제거), 내장 `node:sqlite`, `pi-tui@1.2.0`도 여전히 x64/arm64 6개 prebuild뿐, v1.2.0 릴리스에 armv7 자산 없음. 보드 실측 사이클은 여전히 1.0.4가 마지막(보드 재실행 아직 없음)
 - 원본 로그: [`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)([한국어 해설](armv7-pi2b-verification.ko.md) 포함)
 - 근거는 **실기 계측**이며 정적 추론이 아닙니다: 승인 검사 11/11 통과
 
@@ -20,7 +21,7 @@
 | --- | --- |
 | **Node 22에는 공식 armv7l 빌드가 있고 Node 23 이상에는 없다** | `nodejs.org/dist/index.json`: v22는 **35/35** 모든 릴리스가 `linux-armv7l`을 포함(22.19 이상 11개 포함, 최신 v22.23.2). 최근 12개 릴리스(v23 이상)에는 없음. 이 저장소는 `engines.node >= 22.19.0`을 요구 → **v22 계열에서만 충족** |
 | **공식 사전 빌드 바이너리에 armv7이 없다** | 릴리스 자산은 `linux-x64` / `linux-arm64` / `darwin-x64|arm64` / `windows-x64|arm64`뿐이고 `build-binaries.yml`의 플랫폼 분기도 같은 네 가지뿐 → 공식 tarball은 **사용 불가** |
-| **npm 패키지 경로에는 네이티브 장애물이 없다** | `@earendil-works/pi-coding-agent@1.0.4`: **`os`/`cpu` 제한 없음**, 사전 빌드 CLI 포함(`dist/bundle/*.js`), 의존성은 순수 JS 또는 wasm(`photon-node`가 `photon_rs_bg.wasm` 포함), `canvas`는 `devDependencies`만, 세션 백엔드는 Node 내장 `node:sqlite` |
+| **npm 패키지 경로에는 네이티브 장애물이 없다** | `@earendil-works/pi-coding-agent@1.2.0`(2026-10-13 재검증; 보드 1.0.4 사이클에서 같은 구조를 실측): **`os`/`cpu` 제한 없음**, 사전 빌드 CLI 포함(`dist/bundle/*.js`), 의존성은 순수 JS 또는 wasm(`photon-node`가 `photon_rs_bg.wasm` 포함), `canvas`는 이제 `devDependencies`에서도 제거됨(1.0.4까지는 `devDependencies`만), 세션 백엔드는 Node 내장 `node:sqlite` |
 
 유일한 기능 손실: TUI의 네이티브 X11/클립보드 helper(`linux-platform-x11.node`)는 x64/arm64
 사전 빌드만 있고, 로더 `packages/tui/src/native-platform.ts`는 다른 아키텍처에서 `undefined`를
@@ -69,7 +70,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 1.0.4
+pi --version                 # 1.2.0
 
 # 3) 영구 적용 (~/.bashrc에 추가)
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -138,9 +139,13 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   사전 빌드를 정당하게 동봉합니다. 올바른 불변식은 "**armv7 전용 사전 빌드가 없음** *그리고* CLI가 시작함"입니다.
 - **1.0.4 패키지 메타데이터도 다시 확인했습니다**: 여전히 `os`/`cpu` 제한 없음, `pi-tui`의 사전 빌드는
   여전히 x64/arm64 6개뿐(`linux-arm` 없음).
-- **업스트림 동기화는 ARMv7 작업에 영향을 주지 않습니다**: 업스트림 `28dcce2ba`(v1.0.4)을 병합한 뒤에도
-  ARMv7 delta 20개 중 19개가 바이트 단위로 동일합니다(유일한 차이는 `.gitignore`이며 이번 동기화에서
-  업스트림도 수정했습니다. fork 내용은 그대로 두고 업스트림의 2줄을 병합했으며 `arm` 허용도 유지).
+- **1.2.0 패키지 메타데이터도 다시 확인했습니다(2026-10-13)**: 여전히 `os`/`cpu` 제한 없음, `pi-tui@1.2.0`도
+  같은 6개 prebuild(`linux-arm` 없음), 번들은 `node:sqlite`, `canvas`는 `devDependencies`에서도 제거,
+  v1.2.0 릴리스에 armv7 바이너리 없음.
+- **업스트림 동기화는 ARMv7 작업에 영향을 주지 않습니다**: 업스트림 `7d75a0e3e`(v1.2.0, 2026-10-13)를 병합한 뒤에도
+  ARMv7 delta 20개 중 18개가 바이트 단위로 동일합니다(업스트림의 자체 수정은 `.gitignore`
+  (`node_modules/` → `node_modules`, 심볼릭 링크 포함)와 `README.md` 1줄(chord 패키지 설명)이며 fork 추가분은 유지).
+  `arm` 허용도 유지합니다.
 
 ## 8. 보드 자체만으로 완결되는 실제 모델 1턴(실기 검증, 2026-10-01)
 

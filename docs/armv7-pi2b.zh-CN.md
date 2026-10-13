@@ -8,6 +8,7 @@
 
 - 目标板：Raspberry Pi 2 Model B（armv7l, 4×900 MHz, 921 MiB RAM），Raspbian GNU/Linux 13 (trixie)
 - 实测日期：**2026-10-06（`@earendil-works/pi-coding-agent@1.0.4`）**｜上一轮 2026-10-05 为 1.0.2
+- 包级别复验：**2026-10-13（`@earendil-works/pi-coding-agent@1.2.0`，上游 v1.2.0／`7d75a0e3e`）**：无 `os`/`cpu` 限制、预打包 CLI、纯 JS/wasm 依赖（`canvas` 连 `devDependencies` 都不在）、内建 `node:sqlite`、`pi-tui@1.2.0` 仍只有 6 个 x64/arm64 prebuild、v1.2.0 release 无 armv7 资产。实机量测轮次仍停在 1.0.4（尚未上板重测）
 - 原始记录：[`armv7-pi2b-verification.md`](armv7-pi2b-verification.md)（[简体中文导读](armv7-pi2b-verification.zh-CN.md)）
 - 证据是**实机量测**，不是静态推论：验收 11/11 通过
 
@@ -19,7 +20,7 @@
 | --- | --- |
 | **Node 22 有官方 armv7l 构建，Node 23+ 没有** | `nodejs.org/dist/index.json`：v22 全部 **35/35** 版含 `linux-armv7l`（含 ≥ 22.19 的 11 版，最新 v22.23.2）；最近 12 个版本（v23+）皆无。本 repo 要求 `engines.node >= 22.19.0` → **只能在 v22 线满足** |
 | **官方预编译二进制不含 armv7** | release 资产只有 `linux-x64`／`linux-arm64`／`darwin-x64|arm64`／`windows-x64|arm64`，`build-binaries.yml` 的平台判断同样只列这四个 → 官方 tarball **不可用** |
-| **npm 包路线没有原生障碍** | `@earendil-works/pi-coding-agent@1.0.4`：无 `os`/`cpu` 限制、已含预打包 CLI（`dist/bundle/*.js`）、依赖为纯 JS 或 wasm（`photon-node` 内含 `photon_rs_bg.wasm`）、`canvas` 只在 `devDependencies`、session backend 用 Node 内建 `node:sqlite` |
+| **npm 包路线没有原生障碍** | `@earendil-works/pi-coding-agent@1.2.0`（2026-10-13 复验；板上 1.0.4 轮次测得同样结构）：无 `os`/`cpu` 限制、已含预打包 CLI（`dist/bundle/*.js`）、依赖为纯 JS 或 wasm（`photon-node` 内含 `photon_rs_bg.wasm`）、`canvas` 已连 `devDependencies` 都不在（1.0.4 时仅 `devDependencies`）、session backend 用 Node 内建 `node:sqlite` |
 
 唯一的功能减损：TUI 的原生 X11／剪贴板 helper（`linux-platform-x11.node`）只有 x64/arm64 预编译，
 且加载器 `packages/tui/src/native-platform.ts` 对其他架构直接返回 `undefined`。
@@ -67,7 +68,7 @@ ln -sfn ~/opt/node-v22.23.2-linux-armv7l ~/opt/node22
 export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"
 node -v                      # v22.23.2
 npm install -g --prefix ~/.local @earendil-works/pi-coding-agent
-pi --version                 # 1.0.4
+pi --version                 # 1.2.0
 
 # 3) 持久化（加进 ~/.bashrc）
 echo 'export PATH="$HOME/opt/node22/bin:$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -132,8 +133,8 @@ scripts/pi2-armv7/pi2-pi-agent.sh verify docs/armv7-pi2b-verification.md
   前缀（`node-v22.23.2-linux-armv7l`，我一开始漏了 `v`）；以及我最初写「node_modules 不得有任何 `.node`」
   是错的——包本来就会附其他平台的 prebuild。正确的不变量是「**没有 armv7 专属 prebuild** 且 CLI 能启动」。
 - **1.0.4 的包元数据重新查过**：仍无 `os`/`cpu` 限制，`pi-tui` 仍只附 6 个 x64/arm64 prebuild（没有 `linux-arm`）。
-- **上游同步不影响 ARMv7 工作**：合并上游 `28dcce2ba`（v1.0.4）后，20 个 ARMv7 delta 文件中 19 个逐位元不变
-  （唯一差异是 `.gitignore`，上游本轮也改了它：fork 原内容完整保留并并入上游那两行；`packages/tui/src/native-platform.ts` 也保留 `arm` 许可）。
+- **1.2.0 的包元数据又重查过一次（2026-10-13）**：仍无 `os`/`cpu` 限制，`pi-tui@1.2.0` 仍只有同样的 6 个 prebuild（没有 `linux-arm`），bundle 仍用 `node:sqlite`，`canvas` 已连 `devDependencies` 都不在，v1.2.0 release 资产没有 armv7 binary。
+- **上游同步不影响 ARMv7 工作**：合并上游 `7d75a0e3e`（v1.2.0，2026-10-13）后，20 个 ARMv7 delta 文件中 18 个逐位元不变（上游本轮自己改了 `.gitignore`（`node_modules/` → `node_modules`，涵盖符号链接）和 `README.md` 一行（chord 包描述）——fork 的增补保留；`packages/tui/src/native-platform.ts` 保留 `arm` 许可）。
 
 ## 8. 板子自足的真实模型回合（已实机验证，2026-10-01）
 
